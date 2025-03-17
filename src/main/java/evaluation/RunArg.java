@@ -1,12 +1,17 @@
 package evaluation;
 
-import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
+import evaluation.optimisation.ntbea.functions.TestFunction001;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import utilities.JSONUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static utilities.Utils.getArg;
 
@@ -53,6 +58,13 @@ public enum RunArg {
             "\tThe json-format file is needed if non-default settings for the IGameHeuristic are used.",
             "Win",
             new Usage[]{Usage.ParameterSearch}),
+    evalsPerTrial("The number of games to run per NTBEA trial (default is 1)",
+            1,
+            new Usage[]{Usage.ParameterSearch}),
+    finalPercent("The proportion of the tuningBudget used to determine the best agent across each iteration. \n" +
+            "\t The remainder is divided amongst the iterations.\n",
+            0.5,
+            new Usage[]{Usage.SkillLadder}),
     focusPlayer("(Optional) A JSON file that defines the 'focus' of the tournament.\n" +
             "\t The 'focus' player will be present in every single game.\n" +
             "\t In this case an equal number of games will be run with the focusPlayer\n" +
@@ -65,6 +77,9 @@ public enum RunArg {
             "\t Specifying all|-name1|-name2... will run all games except for name1, name2...",
             "all",
             new Usage[]{Usage.RunGames, Usage.ParameterSearch}),
+    function("The name of the function to be used for the NTBEA process.",
+            new TestFunction001(),
+            new Usage[]{Usage.ParameterSearch}),
     gameParams("(Optional) A JSON file from which the game parameters will be initialised.",
             "",
             new Usage[]{Usage.RunGames, Usage.ParameterSearch}),
@@ -103,15 +118,17 @@ public enum RunArg {
             "\tFor NTBEA this will be used as a final tournament between the recommended agents from each run.",
             1,
             new Usage[]{Usage.RunGames, Usage.ParameterSearch, Usage.SkillLadder}),
-    mode("exhaustive|exhaustiveSP|random|sequential\n" +
+    mode("exhaustive|exhaustiveSP|random|sequential|fixed\n" +
             "\t 'exhaustive' will iterate exhaustively through every possible permutation: \n" +
             "\t every possible player in every possible position, and run an equal number of games'\n" +
             "\t for each. This can be unworkable for a given matchup budget for a large number of players.\n" +
-            "\t 'exhaustiveSP' is the same as exhaustive, but allows for self-play; 'exhaustive' will not duplicate agents in any game.\n"+
+            "\t 'exhaustiveSP' is the same as exhaustive, but allows for self-play; 'exhaustive' will not duplicate agents in any game.\n" +
             "\t 'random' will have a random matchup, while ensuring no duplicates, and that all players get the\n" +
             "\t the same number of games in total. (Unless the number of agents is less than the number of players, \n" +
             "\t in which case self-play will be allowed.)\n" +
             "\t 'sequential' will run tournaments on a ONE_VS_ALL basis between each pair of agents.\n" +
+            "\t 'fixed' will run a fixed tournament, where the same agents occupy the same position for all games.\n" +
+            "\t In this mode the playerDirectory must contain exactly one json file for each position. These will be sorted alphabetically.\n" +
             "\t If a focusPlayer is provided, then 'mode' is ignored.",
             "random",
             new Usage[]{Usage.RunGames}),
@@ -121,6 +138,9 @@ public enum RunArg {
     nPlayers("The number of players in each game. Overrides playerRange.",
             -1,
             new Usage[]{Usage.ParameterSearch, Usage.RunGames}),
+    discretisation("The number of discretisation levels to use in NTBEAFunctions. Default is 10.",
+            10,
+            new Usage[]{Usage.ParameterSearch}),
     neighbourhood("The size of neighbourhood to look at in NTBEA. Default is min(50, |searchSpace|/100) ",
             50,
             new Usage[]{Usage.ParameterSearch}),
@@ -172,12 +192,28 @@ public enum RunArg {
             "\t One tuning process is run for each iteration of SkillLadder.\n",
             1000,
             new Usage[]{Usage.SkillLadder}),
-    finalPercent("The proportion of the tuningBudget used to determine the best agent across each iteration. \n" +
-            "\t The remainder is divided amongst the iterations.\n",
-            0.5,
-            new Usage[]{Usage.SkillLadder}),
-    useThreeTuples("If true then we use 3-tuples as well as 1-, 2- and N-tuples",
+    useNTuples("If true we use N-tuples; this can add extra noise for optimisation",
+            true,
+            new Usage[]{Usage.ParameterSearch}),
+    useTwoTuples("If true then we use 2-tuples as well as 1-tuples",
+            true,
+            new Usage[]{Usage.ParameterSearch}),
+    useThreeTuples("If true then we use 3-tuples as well as 1-tuples",
             false,
+            new Usage[]{Usage.ParameterSearch}),
+    simpleRegret("If true (default is false), then we use sqrt(N)/1+n for exploration instead of \n" +
+            "sqrt(log(N)/n). The latter is derived in a cumulative regret situation, which we are less worried about.",
+            false,
+            new Usage[]{Usage.ParameterSearch}),
+    noiseCombination("Defines the exponent in the generalised mean used to combine exploration terms\n" +
+            "across tuples. 1 is equivalent to a simple mean, higher values will overweight larger values until \n" +
+            "a value approaching infinity is equivalent to a Max function.",
+            1.0,
+            new Usage[]{Usage.ParameterSearch}),
+    quantile("The target quantile for NTBEA evaluation overall. The default (-1) will use the mean\n" +
+            "of the evalGame results. A value of 50 will use the median, and 10 the figure below which 10% of the results lie.\n" +
+            "This only makes sense if evalGames is greater than 0, and for an evalMethod that is score-based.",
+            -1,
             new Usage[]{Usage.ParameterSearch}),
     verbose("If true, then the result of each game is reported. Default is false.",
             false,
@@ -216,9 +252,10 @@ public enum RunArg {
         value = json.getOrDefault(name(), defaultValue);
         if (value instanceof Long) {
             value = ((Long) value).intValue();
-        }
-        if (this == listener) {
+        } else if (this == listener) {
             value = new ArrayList<>(Arrays.asList(((String) value).split("\\|")));
+        } else if (value instanceof JSONObject jsonObj) {
+            value = JSONUtils.loadClassFromJSON(jsonObj);
         }
         return value;
     }
@@ -230,9 +267,35 @@ public enum RunArg {
     public static Map<RunArg, Object> parseConfig(String[] args, List<Usage> usages, boolean checkUnknownArgs) {
         if (checkUnknownArgs)
             checkUnknownArgs(args, usages);
-        return Arrays.stream(RunArg.values())
+        Map<RunArg, Object> commandLineArgs = Arrays.stream(RunArg.values())
                 .filter(arg -> usages.stream().anyMatch(arg::isUsedIn))
                 .collect(toMap(arg -> arg, arg -> arg.parse(args)));
+        // then as a second stage we unpack any arguments specified in the config file
+        String setupFile = commandLineArgs.getOrDefault(RunArg.config, "").toString();
+        if (!setupFile.isEmpty()) {
+            // Read from file in addition (any values on the command line override the file contents)
+            try {
+                FileReader reader = new FileReader(setupFile);
+                JSONParser parser = new JSONParser();
+                JSONObject json = (JSONObject) parser.parse(reader);
+                Map<RunArg, Object> configFileArgs = parseConfig(json, usages);
+                for (RunArg key : configFileArgs.keySet()) {
+                    // we check if the key is already in the command line arguments (we check args directly as
+                    // parseConfig populates all the Map with the default value if not present in the array)
+                    if (Arrays.stream(args).noneMatch(s -> s.startsWith(key.name()))) {
+                        commandLineArgs.put(key, configFileArgs.get(key));
+                    } else {
+                        System.out.println("Using command line value for " + key + " of " + commandLineArgs.get(key));
+                    }
+                }
+            } catch (FileNotFoundException ignored) {
+                throw new AssertionError("Config file not found : " + setupFile);
+                //    parseConfig(runGames, args);
+            } catch (IOException | ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return commandLineArgs;
     }
 
     public static void checkUnknownArgs(String[] args, List<Usage> usages) {

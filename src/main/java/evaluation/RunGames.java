@@ -18,6 +18,7 @@ import players.rmhc.RMHCPlayer;
 import players.simple.OSLAPlayer;
 import players.simple.RandomPlayer;
 import utilities.Pair;
+import utilities.Utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -56,27 +57,11 @@ public class RunGames implements IGameRunner {
         RunGames runGames = new RunGames();
         runGames.config = parseConfig(args, Collections.singletonList(Usage.RunGames));
 
-        String setupFile = runGames.config.getOrDefault(RunArg.config, "").toString();
-        if (!setupFile.isEmpty()) {
-            // Read from file instead
-            try {
-                FileReader reader = new FileReader(setupFile);
-                JSONParser parser = new JSONParser();
-                JSONObject json = (JSONObject) parser.parse(reader);
-                runGames.config = parseConfig(json, Usage.RunGames);
-            } catch (FileNotFoundException ignored) {
-                throw new AssertionError("Config file not found : " + setupFile);
-                //    parseConfig(runGames, args);
-            } catch (IOException | ParseException e) {
-                throw new RuntimeException(e);
-            }
-        }
         runGames.initialiseGamesAndPlayerCount();
         if (!runGames.config.get(RunArg.gameParams).equals("") && runGames.gamesAndPlayerCounts.keySet().size() > 1)
             throw new IllegalArgumentException("Cannot yet provide a gameParams argument if running multiple games");
 
         // 2. Setup
-
         LinkedList<AbstractPlayer> agents = new LinkedList<>();
         if (!runGames.config.get(playerDirectory).equals("")) {
             agents.addAll(PlayerFactory.createPlayers((String) runGames.config.get(playerDirectory)));
@@ -126,7 +111,8 @@ public class RunGames implements IGameRunner {
                 // Add listeners
                 //noinspection unchecked
                 for (String listenerClass : ((List<String>) config.get(listener))) {
-                    IGameListener gameTracker = IGameListener.createListener(listenerClass);
+                    try {
+                        IGameListener gameTracker = IGameListener.createListener(listenerClass);
                     tournament.addListener(gameTracker);
                     String outputDir = (String) config.get(destDir);
                     List<String> directories = new ArrayList<>(Arrays.asList(outputDir.split(Pattern.quote(File.separator))));
@@ -137,6 +123,10 @@ public class RunGames implements IGameRunner {
                     if ((boolean) config.get(addTimeStamp))
                         directories.add(timeDir);
                     gameTracker.setOutputDirectory(directories.toArray(new String[0]));
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Error creating listener: " + e.getMessage());
+                        // this is not a problem as such, we'll still report win rate information which may be all the user wants
+                    }
                 }
 
                 // run tournament

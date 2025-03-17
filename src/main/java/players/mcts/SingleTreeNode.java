@@ -44,7 +44,7 @@ public class SingleTreeNode {
     // variables to track rollout - these were originally local in rollout(); but
     // having them on the node reduces verbiage in passing to advance() to check rollout termination in some edge cases
     // (specifically when using SelfOnly trees, with START/END_TURN/ROUND rollout termination conditions
-    protected int roundAtStartOfRollout, turnAtStartOfRollout, lastActorInRollout;
+    protected int lastActorInRollout, lastTurnInRollout, lastRoundInRollout, turnAtStartOfRollout, roundAtStartOfRollout;
     List<AbstractAction> actionsFromOpenLoopState = new ArrayList<>();
     Map<AbstractAction, Double> actionValueEstimates = new HashMap<>();
     Map<AbstractAction, Double> actionPDFEstimates = new HashMap<>();
@@ -386,7 +386,7 @@ public class SingleTreeNode {
         // selected == this is a clear sign that we have a problem in the expansion phase
         // although if we have no decisions to make - this is fine
 
-        // Monte carlo rollout: return value of MC rollout from the newly added node
+        // Monte Carlo rollout: return value of MC rollout from the newly added node
         int lastActorInTree = actionsInTree.isEmpty() ? decisionPlayer : actionsInTree.get(actionsInTree.size() - 1).a;
         double[] delta = selected.rollout(lastActorInTree);
         // Back up the value of the rollout through the tree
@@ -555,6 +555,8 @@ public class SingleTreeNode {
     protected void advanceState(AbstractGameState gs, AbstractAction act, boolean inRollout) {
         // we execute a copy(), because this can change the action, so we then don't find the node later!
         if (inRollout) {
+            lastTurnInRollout = gs.getTurnCounter();
+            lastRoundInRollout = gs.getRoundCounter();
             lastActorInRollout = gs.getCurrentPlayer();
             root.actionsInRollout.add(new Pair<>(lastActorInRollout, act));
         } else {
@@ -587,6 +589,8 @@ public class SingleTreeNode {
             if (inRollout) {
                 root.actionsInRollout.add(new Pair<>(gs.getCurrentPlayer(), action));
                 lastActorInRollout = gs.getCurrentPlayer();
+                lastRoundInRollout = gs.getRoundCounter();
+                lastTurnInRollout = gs.getTurnCounter();
             }
             forwardModel.next(gs, action);
             root.fmCallsCount++;
@@ -885,6 +889,8 @@ public class SingleTreeNode {
         lastActorInRollout = lastActor;
         roundAtStartOfRollout = openLoopState.getRoundCounter();
         turnAtStartOfRollout = openLoopState.getTurnCounter();
+        lastTurnInRollout = openLoopState.getTurnCounter();
+        lastRoundInRollout = openLoopState.getRoundCounter();
 
         // If rollouts are enabled, select actions for the rollout in line with the rollout policy
         AbstractGameState rolloutState = openLoopState;
@@ -906,7 +912,6 @@ public class SingleTreeNode {
                 }
                 AbstractPlayer agent = rolloutState.getCurrentPlayer() == root.decisionPlayer ? params.getRolloutStrategy() : params.getOpponentModel();
                 next = agent.getAction(rolloutState, availableActions);
-                lastActorInRollout = rolloutState.getCurrentPlayer();
                 advanceState(rolloutState, next, true);
             }
         }
@@ -915,8 +920,8 @@ public class SingleTreeNode {
 
         for (int i = 0; i < retValue.length; i++) {
             retValue[i] = params.heuristic.evaluateState(rolloutState, i);
-            if (Double.isNaN(retValue[i]))
-                throw new AssertionError("Illegal heuristic value - should be a number");
+            if (Double.isNaN(retValue[i]) || Double.isInfinite(retValue[i]))
+                throw new AssertionError("Illegal heuristic value - should be a number - " + params.heuristic.toString());
         }
         return retValue;
     }
@@ -932,13 +937,18 @@ public class SingleTreeNode {
             return true;
         int currentActor = rollerState.getTurnOwner();
         int maxRollout = params.rolloutLengthPerPlayer ? params.rolloutLength * rollerState.getNPlayers() : params.rolloutLength;
-        if (root.actionsInRollout.size() >= maxRollout) {
+        int rolloutDepth = switch (params.rolloutIncrementType) {
+            case TICK -> root.actionsInRollout.size();
+            case TURN -> rollerState.getTurnCounter() - turnAtStartOfRollout;
+            case ROUND -> rollerState.getRoundCounter() - roundAtStartOfRollout;
+        };
+        if (rolloutDepth >= maxRollout) {
             return switch (params.rolloutTermination) {
                 case DEFAULT -> true;
                 case END_ACTION -> lastActorInRollout == root.decisionPlayer && currentActor != root.decisionPlayer;
                 case START_ACTION -> lastActorInRollout != root.decisionPlayer && currentActor == root.decisionPlayer;
-                case END_TURN -> rollerState.getTurnCounter() != turnAtStartOfRollout;
-                case END_ROUND -> rollerState.getRoundCounter() != roundAtStartOfRollout;
+                case END_TURN -> rollerState.getTurnCounter() != lastTurnInRollout;
+                case END_ROUND -> rollerState.getRoundCounter() != lastRoundInRollout;
             };
         }
         return false;
@@ -973,6 +983,8 @@ public class SingleTreeNode {
             if (root.highReward < stats.getMax())
                 root.highReward = stats.getMax();
         }
+        if (root.lowReward == Double.NEGATIVE_INFINITY || root.highReward == Double.POSITIVE_INFINITY)
+            throw new AssertionError("We have somehow failed to update the min or max rewards");
     }
 
     protected double[] processResultsForParanoidOrSelfOnly(double[] result) {
@@ -1047,11 +1059,7 @@ public class SingleTreeNode {
 
         if (params.treePolicy == RegretMatching && nVisits >= actionsToConsider.size() && nVisits % Math.max(actionsToConsider.size(), 10) == 0) {
             // we update the average policy each time we have had the opportunity to take each action once (or every 10 visits, if that is greater)
-            double[] av = actionValues(actionsToConsider);
-            double[] pdf = pdf(av);
-            for (int i = 0; i < actionsToConsider.size(); i++) {
-                regretMatchingAverage.merge(actionsToConsider.get(i), pdf[i], Double::sum);
-            }
+            updateRegretMatchingAverage(actionsToConsider);
         }
 
         if (params.backupPolicy == MCTSEnums.BackupPolicy.MonteCarlo)
@@ -1153,8 +1161,10 @@ public class SingleTreeNode {
         if (params.treePolicy == EXP3) {
             // EXP3 uses the tree policy (without exploration)
             bestAction = treePolicyAction(false);
-        } else if (params.treePolicy == RegretMatching && !regretMatchingAverage.isEmpty()) {
+        } else if (params.treePolicy == RegretMatching) {
             // RM uses a special policy as the average of all previous root policies
+            if (regretMatchingAverage.isEmpty())  // in case we have a very low number of visits
+                updateRegretMatchingAverage(actionsToConsider(actionsFromOpenLoopState));
             bestAction = regretMatchingAverage();
         } else {
             // We iterate through all actions valid in the original root state
@@ -1199,6 +1209,14 @@ public class SingleTreeNode {
         }
 
         return bestAction;
+    }
+
+    protected void updateRegretMatchingAverage(List<AbstractAction> actionsToConsider) {
+        double[] av = actionValues(actionsToConsider);
+        double[] pdf = pdf(av);
+        for (int i = 0; i < actionsToConsider.size(); i++) {
+            regretMatchingAverage.merge(actionsToConsider.get(i), pdf[i], Double::sum);
+        }
     }
 
     protected AbstractAction regretMatchingAverage() {

@@ -2,6 +2,7 @@ package games.stratego;
 
 import core.AbstractGameState;
 import core.AbstractParameters;
+import core.components.BoardNode;
 import core.components.Component;
 import core.components.GridBoard;
 import games.GameType;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StrategoGameState extends AbstractGameState{
-    GridBoard<Piece> gridBoard;
+    GridBoard gridBoard;
 
     /**
      * Constructor. Initialises some generic game state variables.
@@ -43,14 +44,16 @@ public class StrategoGameState extends AbstractGameState{
         if (playerId != -1 && getCoreGameParameters().partialObservable){
             playerAlliance = StrategoConstants.playerMapping.get(playerId);
 
-            for (Piece p: gridBoard.getComponents()) {
+            for (BoardNode bn: gridBoard.getComponents()) {
+                Piece p = (Piece) bn;
                 if (p != null && p.getPieceAlliance() != playerAlliance && !p.isPieceKnown()) {
                     pieceTypesHidden.add(p.getPieceType());
                 }
             }
         }
 
-        for (Piece piece : gridBoard.getComponents()){
+        for (BoardNode bn : gridBoard.getComponents()){
+            Piece piece = (Piece) bn;
             if (piece != null) {
                 if (playerId != -1 && getCoreGameParameters().partialObservable && playerAlliance != piece.getPieceAlliance() && !piece.isPieceKnown()){
                     // Hide type, everything else is known
@@ -74,6 +77,9 @@ public class StrategoGameState extends AbstractGameState{
         return new StrategoHeuristic().evaluateState(this, playerId);
     }
 
+    /**
+     * GameScore has no meaning in Stratego. This will always return zero for any non-terminal game state.
+     */
     @Override
     public double getGameScore(int playerId) {
         return playerResults[playerId].value;
@@ -81,8 +87,7 @@ public class StrategoGameState extends AbstractGameState{
 
     @Override
     protected boolean _equals(Object o) {
-        if (o instanceof StrategoGameState) {
-            StrategoGameState other = (StrategoGameState) o;
+        if (o instanceof StrategoGameState other) {
             return gridBoard.equals(other.gridBoard);
         }
         return false;
@@ -93,7 +98,7 @@ public class StrategoGameState extends AbstractGameState{
         return gridBoard.hashCode();
     }
 
-    public GridBoard<Piece> getGridBoard() {
+    public GridBoard getGridBoard() {
         return gridBoard;
     }
 
@@ -101,7 +106,8 @@ public class StrategoGameState extends AbstractGameState{
     protected List<Integer> _getUnknownComponentsIds(int playerId) {
         ArrayList<Integer> pieceList = new ArrayList<>();
 
-        for (Piece piece : gridBoard.getComponents()){
+        for (BoardNode bn : gridBoard.getComponents()){
+            Piece piece = (Piece) bn;
             if (piece != null){
                 if (playerId != -1){
                     Piece.Alliance playerAlliance = StrategoConstants.playerMapping.get(playerId);

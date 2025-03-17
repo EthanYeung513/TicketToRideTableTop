@@ -22,32 +22,33 @@ public class GraphBoardWithEdges extends Component implements IComponentContaine
     protected Map<Integer, BoardNodeWithEdges> boardNodes;
     protected HashSet<Edge> boardEdges; //all edges
 
+    private static final int initialCapacity = 256;
+
     public GraphBoardWithEdges(String name)
     {
         super(CoreConstants.ComponentType.BOARD, name);
-        boardNodes = new HashMap<>();
+        boardNodes = new HashMap<>(initialCapacity);
         boardEdges = new HashSet<>();
     }
 
     public GraphBoardWithEdges()
     {
         super(CoreConstants.ComponentType.BOARD);
-        boardNodes = new HashMap<>();
+        boardNodes = new HashMap<>(initialCapacity);
         boardEdges = new HashSet<Edge>();
-
     }
 
     protected GraphBoardWithEdges(String name, int ID)
     {
         super(CoreConstants.ComponentType.BOARD, name, ID);
-        boardNodes = new HashMap<>();
+        boardNodes = new HashMap<>(initialCapacity);
         boardEdges = new HashSet<Edge>();
     }
 
     GraphBoardWithEdges(int ID)
     {
         super(CoreConstants.ComponentType.BOARD, ID);
-        boardNodes = new HashMap<>();
+        boardNodes = new HashMap<>(initialCapacity);
         boardEdges = new HashSet<Edge>();
     }
 
@@ -63,24 +64,42 @@ public class GraphBoardWithEdges extends Component implements IComponentContaine
         for (Edge edge : this.boardEdges) {
             newEdges.add(edge.copy());
         }
-        HashMap<Integer, BoardNodeWithEdges> nodeCopies = new HashMap<>();
-        HashMap<Integer, Edge> edgeCopies = new HashMap<>();
-        // Copy board nodes
+        // A temporary map to store the copied edges
+        // this slightly odd Edge -> Edge structure avoids the overhead of Integer Boxing/Unboxing compared
+        // to using a Map<Integer, Edge> for the edge IDs
+        HashMap<Edge, Edge> edgeCopies = new HashMap<>(initialCapacity);
+        HashMap<Integer, BoardNodeWithEdges> nodeCopies = new HashMap<>(initialCapacity);
+        // copy edges
         for (BoardNodeWithEdges bn: boardNodes.values()) {
-            BoardNodeWithEdges bnCopy = bn.copy();
-            if (bnCopy == null) bnCopy = new BoardNodeWithEdges(bn.ownerId, bn.getComponentID());
-            bn.copyComponentTo(bnCopy);
-            nodeCopies.put(bn.getComponentID(), bnCopy);
-            // Copy edges
-            for (Edge e: bn.neighbourEdgeMapping.keySet()) {
-                edgeCopies.put(e.componentID, e.copy());
+            // copy edges (then used in the next loop)
+            for (Edge e: bn.getEdges()) {
+                edgeCopies.put(e, e.copy());
             }
         }
-        // Assign neighbours and edges
+
+        // Copy board nodes; we can't use the same trick as with Edges, because the Node change as we wire them up
         for (BoardNodeWithEdges bn: boardNodes.values()) {
-            BoardNodeWithEdges bnCopy = nodeCopies.get(bn.getComponentID());
-            for (Map.Entry<Edge, BoardNodeWithEdges> e: bn.neighbourEdgeMapping.entrySet()) {
-                bnCopy.addNeighbour(nodeCopies.get(e.getValue().getComponentID()), edgeCopies.get(e.getKey().componentID));
+            BoardNodeWithEdges bnCopy = bn.copy();
+            if (bnCopy == null) bnCopy = new BoardNodeWithEdges(bn.ownerId, bn.componentID);
+            Integer key = bn.getComponentID();
+            bn.copyComponentTo(bnCopy);
+            nodeCopies.put(key, bnCopy);
+            if (bn.neighbourEdgeMapping.size() > 3) {
+                throw new AssertionError("Too many neighbours in a node");
+            }
+        }
+
+        // then update the neighbours
+        for (BoardNodeWithEdges bn: boardNodes.values()) {
+            for (Map.Entry entry : bn.neighbourEdgeMapping.entrySet()) {
+                Edge e = (Edge) entry.getKey();
+                BoardNodeWithEdges otherEnd = (BoardNodeWithEdges) entry.getValue();
+                Edge eCopy = edgeCopies.get(e);
+                Integer keyOne = bn.getComponentID();
+                BoardNodeWithEdges vertexOne = nodeCopies.get(keyOne);
+                Integer keyTwo = otherEnd.getComponentID();
+                BoardNodeWithEdges vertexTwo = nodeCopies.get(keyTwo);
+                vertexOne.addNeighbour(vertexTwo, eCopy);
             }
         }
 
@@ -89,9 +108,6 @@ public class GraphBoardWithEdges extends Component implements IComponentContaine
         b.setBoardEdges(newEdges);
         // Copy properties
         copyComponentTo(b);
-
-        //copy boardedges?
-
         return b;
     }
 
@@ -107,11 +123,11 @@ public class GraphBoardWithEdges extends Component implements IComponentContaine
 
     /**
      * Returns the node in the list which matches the given ID
-     * @param id - ID of node to search for.
+     * @param key - ID of node to search for.
      * @return - node matching ID.
      */
-    public BoardNodeWithEdges getNodeByID(int id) {
-        return boardNodes.get(id);
+    public BoardNodeWithEdges getNodeByID(Integer key) {
+        return boardNodes.get(key);
     }
 
     /**
@@ -171,6 +187,8 @@ public class GraphBoardWithEdges extends Component implements IComponentContaine
     public Edge addConnection(int bn1id, int bn2id) {
         BoardNodeWithEdges bn1 = boardNodes.get(bn1id);
         BoardNodeWithEdges bn2 = boardNodes.get(bn2id);
+        // check to see if already a connection
+        if (bn1.getNeighbours().contains(bn2)) return bn1.getEdge(bn2);
         Edge edge = new Edge();
         addConnection(bn1, bn2, edge);
         return edge;
@@ -330,22 +348,19 @@ public class GraphBoardWithEdges extends Component implements IComponentContaine
     public boolean equals(Object o) {
         if (o instanceof GraphBoardWithEdges) {
             GraphBoardWithEdges other = (GraphBoardWithEdges) o;
-            return componentID == other.componentID && other.boardNodes.equals(boardNodes) && other.boardEdges.equals(boardEdges) ;
+            return componentID == other.componentID && other.boardNodes.equals(boardNodes);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(componentID, boardNodes, boardEdges);
+        return Objects.hash(componentID, boardNodes);
     }
 
     @Override
     public List<Component> getComponents() {
-        List<Component> components = new ArrayList<>();
-        components.addAll(getBoardNodes());
-        components.addAll(getBoardEdges());
-        return components;
+        return new ArrayList<>(getBoardNodes());
     }
 
     public Map<Integer, BoardNodeWithEdges> getBoardNodeMap() {

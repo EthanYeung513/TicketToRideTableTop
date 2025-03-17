@@ -2,11 +2,12 @@ package utilities;
 
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
 import java.util.List;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -81,11 +82,12 @@ public abstract class Utils {
      * Given a total budget of games, and number of players and agents, calculates how many games should be played
      * For each possible permutation of players.
      * This is a helper function to avoid the need for users of Tournaments to (mis-)calculate this themselves.
-     * @param nPlayers - the number of players in each game
-     * @param nAgents - the number of agents we are comparing
+     *
+     * @param nPlayers        - the number of players in each game
+     * @param nAgents         - the number of agents we are comparing
      * @param totalGameBudget - the desired total number of games to play
-//     * @param allowBudgetBreach - if true then we will return the value closest to the totalGameBudget, even if it exceeds it
-//     *                         if false then we will return the value that is less than or equal to the totalGameBudget
+     *                        //     * @param allowBudgetBreach - if true then we will return the value closest to the totalGameBudget, even if it exceeds it
+     *                        //     *                         if false then we will return the value that is less than or equal to the totalGameBudget
      * @return the number of permutations possible
      */
     public static int gamesPerMatchup(int nPlayers, int nAgents, int totalGameBudget, boolean selfPlay) {
@@ -99,7 +101,12 @@ public abstract class Utils {
         if (selfPlay) {
             return (int) Math.pow(nAgents, nPlayers);
         } else {
-            return (int) (CombinatoricsUtils.factorial(nAgents) / CombinatoricsUtils.factorial(nAgents - nPlayers));
+            // nAgents! / (nAgents - nPlayers)!, without having to compute large factorials which may overflow an integer.
+            int ret = 1;
+            for (int i=0;i<nPlayers;i++) {
+                ret *= nAgents - i;
+            }
+            return ret;
         }
     }
 
@@ -468,16 +475,6 @@ public abstract class Utils {
         return null;
     }
 
-    public static <T extends Enum<?>> T searchEnum(Class<T> enumeration, String search) {
-        for (T each : enumeration.getEnumConstants()) {
-            if (each.name().compareToIgnoreCase(search) == 0) {
-                return each;
-            }
-        }
-        return null;
-    }
-
-
     public static BufferedImage convertToType(BufferedImage sourceImage, int targetType) {
         BufferedImage image;
 
@@ -514,6 +511,50 @@ public abstract class Utils {
             r.append(w).append(" ");
         }
         return r.toString().trim();
+    }
+
+
+    /**
+     * Rotates and scales an image clockwise by 90 degrees. Orientation says how many times the image should be rotated:
+     * 0 = 0 degrees
+     * 1 = 90 degrees
+     * 2 = 180 degrees
+     * 3 = 270 degrees
+     * @param image - image to rotate
+     * @param scaledWidthHeight - desired width and height of image after scaling
+     * @param orientation - as described above
+     * @return - new image, rotated and scaled (* does not modify original image)
+     */
+    public static BufferedImage rotateImage(BufferedImage image, Pair<Integer, Integer> scaledWidthHeight, int orientation) {
+        final double rads = Math.toRadians(90*orientation);
+        final double sin = Math.abs(Math.sin(rads));
+        final double cos = Math.abs(Math.cos(rads));
+        final int w = (int) Math.floor(scaledWidthHeight.a * cos + scaledWidthHeight.b * sin);
+        final int h = (int) Math.floor(scaledWidthHeight.b * cos + scaledWidthHeight.a * sin);
+        AffineTransform at;
+        if (orientation % 2 == 0) {
+            at = AffineTransform.getRotateInstance(rads, scaledWidthHeight.a/2., scaledWidthHeight.b/2.);
+            at.scale(scaledWidthHeight.a * 1.0 / image.getWidth(), scaledWidthHeight.b * 1.0 / image.getHeight());
+        } else {
+            at = AffineTransform.getTranslateInstance((scaledWidthHeight.b-scaledWidthHeight.a)/2., (scaledWidthHeight.a-scaledWidthHeight.b)/2.);
+            at.rotate(rads, scaledWidthHeight.a/2., scaledWidthHeight.b/2.);
+            at.scale(scaledWidthHeight.a * 1.0 / image.getWidth(), scaledWidthHeight.b * 1.0 / image.getHeight());
+        }
+        final AffineTransformOp rotateOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BICUBIC);
+        BufferedImage rotatedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        return rotateOp.filter(image, rotatedImage);
+    }
+
+    /**
+     * Case-insensitive search for enum element given string.
+     */
+    public static <T extends Enum<?>> T searchEnum(Class<T> enumeration, String search) {
+        for (T each : enumeration.getEnumConstants()) {
+            if (each.name().compareToIgnoreCase(search) == 0) {
+                return each;
+            }
+        }
+        return null;
     }
 
     public static String getNumberSuffix(final int n) {
