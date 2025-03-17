@@ -15,7 +15,6 @@ import java.util.*;
 import static evaluation.metrics.Event.GameEvent.*;
 import static evaluation.metrics.IDataLogger.ReportDestination.*;
 import static evaluation.metrics.IDataLogger.ReportType.*;
-import static utilities.Utils.createDirectory;
 
 /**
  * Main Game Listener class. An instance can be attached to a game, which will then cause registered metrics in this
@@ -100,7 +99,7 @@ public class MetricsGameListener implements IGameListener {
 
         if (reportDestinations.contains(ToFile) || reportDestinations.contains(ToBoth)) {
             // If the "metrics/out/" does not exist, create it
-            String folder = createDirectory(nestedDirectories);
+            String folder = Utils.createDirectory(nestedDirectories);
             destDir = new File(folder).getAbsolutePath() + File.separator;
         }
         return success;
@@ -119,30 +118,32 @@ public class MetricsGameListener implements IGameListener {
             // Create a folder for all files to be put in, with the game name and current timestamp
             File folder = new File(destDir);
             if (!folder.exists()) {
-                createDirectory(destDir);
+                success = folder.mkdir();
             }
         }
 
         // All metrics report themselves
-        // If we only want the raw data per event (e.g. if you are James), then this just creates a whole load
-        // of redundant directories
-        if (!(reportTypes.size() == 1 && reportTypes.contains(RawDataPerEvent)))
-            for (AbstractMetric metric : metrics.values()) {
-                metric.report(destDir, reportTypes, reportDestinations);
-            }
-
-        // We also create raw data files for groups of metrics responding to the same event
-        if (reportTypes.contains(RawDataPerEvent)) {
-            for (IGameEvent event : eventsOfInterest) {
-                List<AbstractMetric> eventMetrics = new ArrayList<>();
+        if (success) {
+            // If we only want the raw data per event (e.g. if you are James), then this just creates a whole load
+            // of redundant directories
+            if (!(reportTypes.size() == 1 && reportTypes.contains(RawDataPerEvent)))
                 for (AbstractMetric metric : metrics.values()) {
-                    if (metric.listens(event)) {
-                        eventMetrics.add(metric);
-                    }
+                    metric.report(destDir, reportTypes, reportDestinations);
                 }
-                if (!eventMetrics.isEmpty()) {
-                    IDataLogger dataLogger = new DataTableSaw(eventMetrics, event, eventToIndexingColumn(event));
-                    dataLogger.getDefaultProcessor().processRawDataToFile(dataLogger, destDir);
+
+            // We also create raw data files for groups of metrics responding to the same event
+            if (reportTypes.contains(RawDataPerEvent)) {
+                for (IGameEvent event : eventsOfInterest) {
+                    List<AbstractMetric> eventMetrics = new ArrayList<>();
+                    for (AbstractMetric metric : metrics.values()) {
+                        if (metric.listens(event)) {
+                            eventMetrics.add(metric);
+                        }
+                    }
+                    if (!eventMetrics.isEmpty()) {
+                        IDataLogger dataLogger = new DataTableSaw(eventMetrics, event, eventToIndexingColumn(event));
+                        dataLogger.getDefaultProcessor().processRawDataToFile(dataLogger, destDir);
+                    }
                 }
             }
         }

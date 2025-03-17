@@ -1,8 +1,9 @@
 package games.loveletter.actions;
 
+import core.AbstractGameState;
 import core.interfaces.IPrintable;
 import games.loveletter.LoveLetterGameState;
-import games.loveletter.cards.CardType;
+import games.loveletter.cards.LoveLetterCard;
 
 /**
  * The handmaid protects the player from any targeted effects until the next turn.
@@ -10,7 +11,7 @@ import games.loveletter.cards.CardType;
 public class HandmaidAction extends PlayCard implements IPrintable {
 
     public HandmaidAction(int cardIdx, int playerID) {
-        super(CardType.Handmaid, cardIdx, playerID, -1, null, null, true, true);
+        super(LoveLetterCard.CardType.Handmaid, cardIdx, playerID, -1, null, null, true, true);
     }
 
     @Override

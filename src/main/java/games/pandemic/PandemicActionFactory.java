@@ -257,7 +257,7 @@ class PandemicActionFactory {
                 .getProperty(playerLocationHash);
         String playerLocationName = playerLocationProperty.value;
         BoardNode playerLocationNode = pgs.world.getNodeByProperty(nameHash, playerLocationProperty);
-        Set<BoardNode> neighbours = playerLocationNode.getNeighbours().keySet();
+        HashSet<BoardNode> neighbours = playerLocationNode.getNeighbours();
 
         // Drive / Ferry add actions for travelling to immediate cities
         for (BoardNode otherCity : neighbours){

@@ -8,8 +8,6 @@ import evaluation.listeners.MetricsGameListener;
 import java.io.File;
 import java.util.*;
 
-import static utilities.Utils.createDirectory;
-
 /**
  * Records all data per player combination.
  * This is a wrapper around any AbstractMetric
@@ -105,8 +103,12 @@ public class TournamentMetric extends AbstractMetric {
             String folder = folderName + e.getKey().toString();
             // Make folder if it doesn't exist
             File f = new File(folder);
+            boolean success = true;
             if (!f.exists()) {
-                createDirectory(folder);
+                success = f.mkdir();
+            }
+            if (!success) {
+                throw new AssertionError("Could not create folder " + folder + " for data logger " + e.getValue().getClass().getSimpleName() + " for metric " + this.getClass().getSimpleName() + "!");
             }
             IDataLogger logger = e.getValue();
 

@@ -18,6 +18,9 @@ import players.python.PythonAgent;
 import players.simple.RandomPlayer;
 import utilities.ActionTreeNode;
 
+import games.explodingkittens.*;
+
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -26,7 +29,7 @@ import java.util.stream.IntStream;
 enum FeatureExtractors {
     /* Every game implementing the RL interfaces should be registered here, PyTAG uses this to reference the correct features extractors and action spaces
     * In case that an interface is not implemented they can be set to null*/
-  //  ExplodingKittens( ExplodingKittensFeatures.class, null),
+    ExplodingKittens( ExplodingKittensFeatures.class, null),
     LoveLetter(LLStateFeaturesReduced.class, null),
     Stratego(StrategoFeatures.class, null),
     SushiGo(null, SGFeatures.class),

@@ -360,11 +360,9 @@ public class PandemicForwardModel extends AbstractRuleBasedForwardModel {
         else return getPlayerActions(pgs);
     }
 
-    public PandemicForwardModel copy() {
-        PandemicForwardModel retValue = new PandemicForwardModel(copyRoot());
-        retValue.decisionPlayerID = decisionPlayerID;
-        retValue.decorators = new ArrayList<>(decorators);
-        return retValue;
+    @Override
+    protected AbstractForwardModel _copy() {
+        return new PandemicForwardModel(copyRoot());
     }
 
     @Override

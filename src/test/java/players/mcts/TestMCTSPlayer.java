@@ -56,8 +56,4 @@ public class TestMCTSPlayer extends MCTSPlayer {
             super.createRootNode(gameState);
     }
 
-    public boolean wasRemoved(Object key) {
-        return ((MCGSNode) root).keysTorRemove.contains(key);
-    }
-
 }

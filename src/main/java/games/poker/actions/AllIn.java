@@ -5,6 +5,8 @@ import core.actions.AbstractAction;
 import core.interfaces.IPrintable;
 import games.poker.PokerGameState;
 
+import java.util.Objects;
+
 public class AllIn extends AbstractAction implements IPrintable {
     private final int playerId;
     public AllIn(int id) {
@@ -20,7 +22,7 @@ public class AllIn extends AbstractAction implements IPrintable {
         pgs.getPlayerAllIn()[playerId] = true;
 
         // Others can't check, unless all in
-        pgs.getPlayerMustCall(playerId);
+        pgs.otherPlayerMustCall(playerId);
 
         return true;
     }

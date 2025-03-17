@@ -4,7 +4,6 @@ import core.AbstractGameState;
 import core.components.Deck;
 import core.interfaces.IPrintable;
 import games.loveletter.LoveLetterGameState;
-import games.loveletter.cards.CardType;
 import games.loveletter.cards.LoveLetterCard;
 
 /**
@@ -13,8 +12,8 @@ import games.loveletter.cards.LoveLetterCard;
  */
 public class GuardAction extends PlayCard implements IPrintable {
 
-    public GuardAction(int cardIdx, int playerID, int opponentID, CardType cardtype, boolean canExecuteEffect, boolean discard) {
-        super(CardType.Guard, cardIdx, playerID, opponentID, cardtype, null, canExecuteEffect, discard);
+    public GuardAction(int cardIdx, int playerID, int opponentID, LoveLetterCard.CardType cardtype, boolean canExecuteEffect, boolean discard) {
+        super(LoveLetterCard.CardType.Guard, cardIdx, playerID, opponentID, cardtype, null, canExecuteEffect, discard);
     }
 
     @Override

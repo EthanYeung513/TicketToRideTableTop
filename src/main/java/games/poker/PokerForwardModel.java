@@ -97,9 +97,9 @@ public class PokerForwardModel extends StandardForwardModel {
         } else {
             new Bet(pgs.bigId, params.bigBlind).execute(pgs);
         }
-        // It is then possible that the round ends immediately
+        // It is then possible that the round (and game) ends immediately
         // if there are 2 players left, and one went AllIn on the blind
-        if (pgs.isRoundOver()) {
+        if (pgs.checkRoundOver()) {
             roundEnd(pgs);
         }
 
@@ -128,11 +128,11 @@ public class PokerForwardModel extends StandardForwardModel {
         // a player is only out of the phase if they have acted, and do not need to call
 
         pgs.playerActStreet[pgs.getCurrentPlayer()] = true;
-        if (pgs.isRoundOver()) {
+        if (pgs.checkRoundOver()) {
             roundEnd(pgs);
             return;
         }
-        if (!pgs.isPlayerStillToAct()) {
+        if (!pgs.playersLeftToAct()) {
             // Phase over, move to next phase
             pgs.setBet(false);
             // reset all players to act (Fold and AllIn unchanged)

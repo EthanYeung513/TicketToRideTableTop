@@ -4,7 +4,9 @@ import core.AbstractGameState;
 import core.interfaces.IStateHeuristic;
 import evaluation.optimisation.TunableParameters;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class Wonders7Heuristic extends TunableParameters implements IStateHeuristic {
 
@@ -31,9 +33,9 @@ public class Wonders7Heuristic extends TunableParameters implements IStateHeuris
         double highestVP = 0.0; // Highest VP
         double lowestVP = 0.0; // Highest VP
 
-        List<Map<Wonders7Constants.Resource, Integer>> playerResourcesCopy = new ArrayList<>();
-        for (Map<Wonders7Constants.Resource, Integer> map : wgs.playerResources) {
-            playerResourcesCopy.add(new EnumMap<>(map));  // Will be used to calculate everybody's VP scores
+        List<HashMap<Wonders7Constants.Resource, Integer>> playerResourcesCopy = new ArrayList<>();
+        for (HashMap<Wonders7Constants.Resource, Integer> map : wgs.playerResources) {
+            playerResourcesCopy.add(new HashMap<>(map));  // Will be used to calculate everybody's VP scores
         }
 
         for (int i=0;i<wgs.getNPlayers();i++){

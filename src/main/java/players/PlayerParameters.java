@@ -1,6 +1,5 @@
 package players;
 
-import core.AbstractPlayer;
 import core.interfaces.IPlayerDecorator;
 import core.actions.ActionSpace;
 import core.interfaces.IStateHeuristic;
@@ -8,7 +7,7 @@ import evaluation.optimisation.TunableParameters;
 
 import java.util.Arrays;
 
-public class PlayerParameters extends TunableParameters<AbstractPlayer> {
+public class PlayerParameters extends TunableParameters {
 
     public double noiseEpsilon = 1e-6;
 
@@ -78,7 +77,7 @@ public class PlayerParameters extends TunableParameters<AbstractPlayer> {
     }
 
     @Override
-    public AbstractPlayer instantiate() {
+    public Object instantiate() {
         throw new RuntimeException("PlayerParameters should not be instantiated directly.");
     }
 

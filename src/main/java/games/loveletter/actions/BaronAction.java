@@ -5,18 +5,17 @@ import core.components.Deck;
 import core.components.PartialObservableDeck;
 import core.interfaces.IPrintable;
 import games.loveletter.LoveLetterGameState;
-import games.loveletter.cards.CardType;
 import games.loveletter.cards.LoveLetterCard;
 
 /**
  * The Baron lets two players compare their hand card. The player with the lesser valued card is removed from the game.
  */
 public class BaronAction extends PlayCard implements IPrintable {
-    private transient CardType playerCard;
-    private transient CardType opponentCard;
+    private transient LoveLetterCard.CardType playerCard;
+    private transient LoveLetterCard.CardType opponentCard;
 
     public BaronAction(int cardIdx, int playerID, int opponentID, boolean canExecuteEffect, boolean discard) {
-        super(CardType.Baron, cardIdx, playerID, opponentID, null, null, canExecuteEffect, discard);
+        super(LoveLetterCard.CardType.Baron, cardIdx, playerID, opponentID, null, null, canExecuteEffect, discard);
     }
 
     @Override

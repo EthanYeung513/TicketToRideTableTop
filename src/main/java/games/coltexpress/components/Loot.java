@@ -29,7 +29,6 @@ public class Loot extends Component {
         return new Loot(ColtExpressTypes.LootType.Strongbox, 1000);
     }
 
-    // point value of the loot
     public int getValue(){
         return value;
     }

@@ -1,6 +1,7 @@
 package games.dominion.metrics;
 
 import core.AbstractGameState;
+import core.CoreConstants;
 import core.interfaces.IStateFeatureVector;
 import games.dominion.DominionConstants;
 import games.dominion.DominionGameState;
@@ -37,11 +38,11 @@ public class DomStateFeaturesReduced implements IStateFeatureVector {
 
         // actionsLeft
         if (state.getCurrentPlayer() == playerId)
-            retValue[5] = state.getActionsLeft();
+            retValue[5] = state.actionsLeft();
 
         // buysLeft
         if (state.getCurrentPlayer() == playerId)
-            retValue[6] = state.getBuysLeft() / 5.0;
+            retValue[6] = state.buysLeft() / 5.0;
 
         retValue[7] = state.getTotal(playerId, c -> c.cardType() == CardType.PROVINCE ? 1 : 0);
 

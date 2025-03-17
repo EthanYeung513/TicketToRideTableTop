@@ -3,9 +3,13 @@ package games.sushigo;
 import core.AbstractGameState;
 import core.AbstractParameters;
 import core.components.*;
+import core.interfaces.IStateFeatureJSON;
 import games.GameType;
 import games.sushigo.actions.ChooseCard;
 import games.sushigo.cards.SGCard;
+import games.wonders7.Wonders7GameParameters;
+import org.json.simple.JSONObject;
+import utilities.Pair;
 
 import java.util.*;
 
@@ -106,7 +110,7 @@ public class SGGameState extends AbstractGameState {
 
             // Add player hands unseen back to the draw pile
             for (int p = 0; p < copy.playerHands.size(); p++) {
-                if (!isHandKnown(playerId, p)) {
+                if (!hasSeenHand(playerId, p)) {
                     copy.drawPile.add(playerHands.get(p));
                 }
             }
@@ -114,7 +118,7 @@ public class SGGameState extends AbstractGameState {
 
             // Now we draw into the unknown player hands
             for (int p = 0; p < copy.playerHands.size(); p++) {
-                if (!isHandKnown(playerId, p)) {
+                if (!hasSeenHand(playerId, p)) {
                     Deck<SGCard> hand = copy.playerHands.get(p);
                     int handSize = hand.getSize();
                     hand.clear();
@@ -140,10 +144,14 @@ public class SGGameState extends AbstractGameState {
     }
 
     /**
-     * we know the contents of the hands of the players that are deckRotations spaces to the left of the current player
-     * if this returns true, then the information provided by the playerHands is reliably correct (if false, then this information is shuffled)
+     * we do know the contents of the hands of players up to T to our left, where T is the number of player turns
+     * so far, as we saw that hand on its way through our own
+     *
+     * @param playerId   - id of player whose vision we're checking
+     * @param opponentId - id of opponent owning the hand of cards we're checking vision of
+     * @return - true if player has not seen the opponent's hand of cards, false otherwise
      */
-    public boolean isHandKnown(int playerId, int opponentId) {
+    public boolean hasSeenHand(int playerId, int opponentId) {
         // Player 0 is one space to the 'Left' of player 1
         int opponentSpacesToLeft = (playerId - opponentId + getNPlayers()) % getNPlayers();
         return opponentSpacesToLeft <= deckRotations;
@@ -158,9 +166,6 @@ public class SGGameState extends AbstractGameState {
         pointsPerCardType[p].get(fromType).increment(amount);
     }
 
-    /**
-     * Returns a List of player hands. This is ordered by player ID.
-     */
     public List<Deck<SGCard>> getPlayerHands() {
         return playerHands;
     }
@@ -185,9 +190,6 @@ public class SGGameState extends AbstractGameState {
     }
 
     @Override
-    /**
-     * Tie break is the number of puddings
-     */
     public double getTiebreak(int playerId, int tier) {
         // Tie-break is number of puddings
         return playedCardTypes[playerId].get(SGCard.SGCardType.Pudding).getValue();
@@ -198,18 +200,10 @@ public class SGGameState extends AbstractGameState {
         return playerScore[playerId].getValue();
     }
 
-    /**
-     * Returns a Map from CardType to the number of times that card type has been played by the player.
-     * This only includes the current round.
-     */
     public Map<SGCard.SGCardType, Counter>[] getPlayedCardTypes() {
         return playedCardTypes;
     }
 
-    /**
-     * Returns a Map from CardType to the number of times that card type has been played by the player.
-     * This is over the whole game.
-     */
     public Map<SGCard.SGCardType, Counter>[] getPlayedCardTypesAllGame() {
         return playedCardTypesAllGame;
     }
@@ -218,17 +212,10 @@ public class SGGameState extends AbstractGameState {
         return pointsPerCardType;
     }
 
-    /**
-     * Returns the number of times a card type has been played by a player in the current round.
-     * (Value returned in a Counter object)
-     */
     public Counter getPlayedCardTypes(SGCard.SGCardType cardType, int player) {
         return playedCardTypes[player].get(cardType);
     }
 
-    /**
-     * The Deck of all played cards
-     */
     public List<Deck<SGCard>> getPlayedCards() {
         return playedCards;
     }

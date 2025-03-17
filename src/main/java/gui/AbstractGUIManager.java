@@ -5,6 +5,7 @@ import core.AbstractPlayer;
 import core.CoreConstants;
 import core.Game;
 import core.actions.AbstractAction;
+import core.interfaces.IGameEvent;
 import evaluation.listeners.IGameListener;
 import evaluation.metrics.Event;
 import players.human.ActionController;
@@ -21,7 +22,7 @@ import static java.util.stream.Collectors.joining;
 public abstract class AbstractGUIManager {
     protected GamePanel parent;
     protected Game game;
-    protected Set<Integer> humanPlayerIds;
+    protected Set<Integer> humanPlayerId;
 
     public static int defaultItemSize = 50;
     public static int defaultActionPanelHeight = 100;
@@ -49,7 +50,7 @@ public abstract class AbstractGUIManager {
         this.maxActionSpace = getMaxActionSpace();
         this.parent = parent;
         this.game = game;
-        this.humanPlayerIds = human;
+        this.humanPlayerId = human;
 
         gameStatus = new JLabel();
         playerStatus = new JLabel();
@@ -166,8 +167,8 @@ public abstract class AbstractGUIManager {
         return ac;
     }
 
-    public Set<Integer> getHumanPlayerIds() {
-        return humanPlayerIds;
+    public Set<Integer> getHumanPlayerId() {
+        return humanPlayerId;
     }
 
     /**
@@ -197,7 +198,7 @@ public abstract class AbstractGUIManager {
         wrapper.setLayout(new FlowLayout());
         wrapper.add(gameInfo);
 
-        createActionHistoryPanel(width / 2 - 10, height, humanPlayerIds);
+        createActionHistoryPanel(width / 2 - 10, height, humanPlayerId);
         wrapper.add(historyContainer);
         return wrapper;
     }

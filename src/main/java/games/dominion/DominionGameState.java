@@ -122,10 +122,7 @@ public class DominionGameState extends AbstractGameState implements IPrintable {
         return false;
     }
 
-    /**
-     * The number of actions the current player has left
-     */
-    public int getActionsLeft() {
+    public int actionsLeft() {
         return actionsLeftForCurrentPlayer;
     }
 
@@ -133,10 +130,7 @@ public class DominionGameState extends AbstractGameState implements IPrintable {
         actionsLeftForCurrentPlayer += delta;
     }
 
-    /**
-     * The number of buys the current player has left
-     */
-    public int getBuysLeft() {
+    public int buysLeft() {
         return buysLeftForCurrentPlayer;
     }
 
@@ -152,10 +146,7 @@ public class DominionGameState extends AbstractGameState implements IPrintable {
         additionalSpendAvailable += delta;
     }
 
-    /**
-     * How much money does the player have available to spend?
-     */
-    public int getAvailableSpend(int playerID) {
+    public int availableSpend(int playerID) {
         if (playerID != turnOwner) {
             return 0;
         }
@@ -184,10 +175,6 @@ public class DominionGameState extends AbstractGameState implements IPrintable {
         return components;
     }
 
-    /**
-     * Get the Deck of the specified type for the specified player.
-     * DeckType.ALL is not valid
-     */
     public Deck<DominionCard> getDeck(DeckType deck, int playerId) {
         switch (deck) {
             case HAND:
@@ -204,10 +191,6 @@ public class DominionGameState extends AbstractGameState implements IPrintable {
         throw new AssertionError("Unknown deck type " + deck);
     }
 
-    /**
-     * How many cards of the specified type are in the player's deck?
-     * Use DeckType.ALL to count all cards in all decks.
-     */
     public int cardsOfType(CardType type, int playerId, DeckType deck) {
         Deck<DominionCard> allCards;
         switch (deck) {
@@ -234,7 +217,7 @@ public class DominionGameState extends AbstractGameState implements IPrintable {
         return (int) allCards.stream().filter(c -> c.cardType() == type).count();
     }
 
-    public List<CardType> getCardsToBuy() {
+    public List<CardType> cardsToBuy() {
         return cardsIncludedInGame.keySet().stream()
                 .filter(c -> cardsIncludedInGame.get(c) > 0)
                 .sorted(comparingInt(c -> -c.cost))
@@ -342,23 +325,22 @@ public class DominionGameState extends AbstractGameState implements IPrintable {
     }
 
     /**
-     * This provides the current score for the specified player.
+     * This provides the current score in game turns. This will only be relevant for games that have the concept
+     * of victory points, etc.
+     * If a game does not support this directly, then just return 0.0
+     *
+     * @param playerId Player number
+     * @return - double, score of current state
      */
     @Override
     public double getGameScore(int playerId) {
         return getTotal(playerId, c -> c.victoryPoints(playerId, this));
     }
 
-    /**
-     * This provides the total value of the specified deck for the player using the provided cardValuer function
-     */
     public int getTotal(int playerId, DeckType deck, Function<DominionCard, Integer> cardValuer) {
         return getDeck(deck, playerId).sumInt(cardValuer);
     }
 
-    /**
-     * This provides the total value across all decks for the player using the provided cardValuer function
-     */
     public int getTotal(int playerId, Function<DominionCard, Integer> cardValuer) {
         int score = playerHands[playerId].sumInt(cardValuer);
         score += playerDiscards[playerId].sumInt(cardValuer);
@@ -367,7 +349,6 @@ public class DominionGameState extends AbstractGameState implements IPrintable {
         return score;
     }
 
-    // How many cards does the player have in total?
     public int getTotalCards(int playerId) {
         return playerDrawPiles[playerId].getSize() + playerDiscards[playerId].getSize()
                 + playerHands[playerId].getSize() + playerTableaux[playerId].getSize();

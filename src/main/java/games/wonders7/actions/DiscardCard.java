@@ -10,11 +10,11 @@ import games.wonders7.cards.Wonder7Card;
 import java.util.Objects;
 
 public class DiscardCard extends DrawCard {
-    public final Wonder7Card.CardType cardType;
+    public final String cardName;
     public final int player;
 
-    public DiscardCard(Wonder7Card.CardType cardType, int player){
-        this.cardType = cardType;
+    public DiscardCard(String cardName, int player){
+        this.cardName = cardName;
         this.player = player;
     }
 
@@ -22,7 +22,17 @@ public class DiscardCard extends DrawCard {
         Wonders7GameState wgs = (Wonders7GameState) gameState;
 
         // Finds card being removed in player Hand
-        Wonder7Card card = wgs.findCardInHand(player, cardType);
+        Wonder7Card card = null;
+        for (Wonder7Card cardSearch: wgs.getPlayerHand(player).getComponents()){ // Goes through each card in the playerHand
+            if (cardName.equals(cardSearch.cardName)){ // If cardName is the one searching for (being played)
+                card = cardSearch;
+                break;
+            }
+        }
+
+        if (card == null) {
+            throw new AssertionError("Card not found in player hand");
+        }
 
         // Player gets 3 coins from discarding card
         int playerValue = wgs.getPlayerResources(player).get(Wonders7Constants.Resource.Coin); // No. Coins player has
@@ -42,7 +52,7 @@ public class DiscardCard extends DrawCard {
 
     @Override
     public String toString() {
-        return "Player " + player + " discards card " + cardType;
+        return "Player " + player + " discards card " + cardName;
     }
 
     @Override
@@ -56,12 +66,12 @@ public class DiscardCard extends DrawCard {
         if (!(o instanceof DiscardCard)) return false;
         if (!super.equals(o)) return false;
         DiscardCard that = (DiscardCard) o;
-        return player == that.player && cardType == that.cardType;
+        return player == that.player && Objects.equals(cardName, that.cardName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), cardType.ordinal(), player);
+        return Objects.hash(super.hashCode(), cardName, player);
     }
 
     @Override

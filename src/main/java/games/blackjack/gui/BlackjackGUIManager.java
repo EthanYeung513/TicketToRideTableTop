@@ -134,6 +134,8 @@ public class BlackjackGUIManager extends AbstractGUIManager {
         return 15;
     }
 
+
+    @Override
     protected JComponent createActionPanel(IScreenHighlight[] highlights, int width, int height, boolean boxLayout) {
         JPanel actionPanel = new JPanel();
         actionPanel.setOpaque(false);

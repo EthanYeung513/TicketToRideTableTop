@@ -10,7 +10,7 @@ import utilities.Vector2D;
 import javax.swing.*;
 import java.awt.*;
 
-import static utilities.GUIUtils.*;
+import static games.terraformingmars.gui.Utils.*;
 
 public class TMDeckDisplay extends JComponent implements IScreenHighlight {
 

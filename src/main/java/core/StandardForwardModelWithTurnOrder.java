@@ -48,4 +48,9 @@ public abstract class StandardForwardModelWithTurnOrder extends AbstractForwardM
         AbstractGameStateWithTurnOrder state = (AbstractGameStateWithTurnOrder) gs;
         state.getTurnOrder().endPlayerTurn(gs);
     }
+
+    @Override
+    public StandardForwardModelWithTurnOrder _copy() {
+        return this;
+    }
 }

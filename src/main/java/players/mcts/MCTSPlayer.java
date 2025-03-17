@@ -8,7 +8,6 @@ import core.interfaces.IActionHeuristic;
 import evaluation.listeners.IGameListener;
 import core.interfaces.IStateHeuristic;
 import evaluation.metrics.Event;
-import llm.IHasStateHeuristic;
 import players.IAnyTimePlayer;
 import utilities.Pair;
 import utilities.Utils;
@@ -22,7 +21,7 @@ import java.util.stream.Collectors;
 import static players.mcts.MCTSEnums.OpponentTreePolicy.*;
 import static players.mcts.MCTSEnums.OpponentTreePolicy.MultiTree;
 
-public class MCTSPlayer extends AbstractPlayer implements IAnyTimePlayer, IHasStateHeuristic {
+public class MCTSPlayer extends AbstractPlayer implements IAnyTimePlayer {
 
     // Heuristics used for the agent
     protected boolean debug = false;
@@ -30,7 +29,6 @@ public class MCTSPlayer extends AbstractPlayer implements IAnyTimePlayer, IHasSt
     protected Pair<Integer, AbstractAction> lastAction;
     List<Map<Object, Pair<Integer, Double>>> MASTStats;
     protected Map<Object, Integer> oldGraphKeys = new HashMap<>();
-    protected List<Object> recentlyRemovedKeys = new ArrayList<>();
 
     public MCTSPlayer() {
         this(new MCTSParams());
@@ -122,22 +120,17 @@ public class MCTSPlayer extends AbstractPlayer implements IAnyTimePlayer, IHasSt
 
     protected SingleTreeNode newRootNode(AbstractGameState gameState) {
         MCTSParams params = getParameters();
-        recentlyRemovedKeys.clear();
         if (params.reuseTree && (params.opponentTreePolicy == MCGS || params.opponentTreePolicy == MCGSSelfOnly)) {
             // In this case we remove any nodes from the graph that were not present before the last action was taken
             MCGSNode mcgsRoot = (MCGSNode) root;
             for (Object key : oldGraphKeys.keySet()) {
                 int oldVisits = oldGraphKeys.get(key);
-                MCGSNode node = mcgsRoot.getTranspositionMap().get(key);
-                if (node != null) { // it might have been removed for having a negative depth
-                    int newVisits = node.nVisits;
-                    if (newVisits == oldVisits) {
-                        // no change, so remove
-                        mcgsRoot.getTranspositionMap().remove(key);
-                        recentlyRemovedKeys.add(key);
-                    } else if (newVisits < oldVisits) {
-                        throw new AssertionError("Unexpectedly fewer visits to a state than before");
-                    }
+                int newVisits = mcgsRoot.getTranspositionMap().get(key) != null ? mcgsRoot.getTranspositionMap().get(key).nVisits : 0;
+                if (newVisits == oldVisits) {
+                    // no change, so remove
+                    mcgsRoot.getTranspositionMap().remove(key);
+                } else if (newVisits < oldVisits) {
+                    throw new AssertionError("Unexpectedly fewer visits to a state than before");
                 }
             }
             // then reset the old keys
@@ -309,9 +302,9 @@ public class MCTSPlayer extends AbstractPlayer implements IAnyTimePlayer, IHasSt
 
     @Override
     public MCTSPlayer copy() {
-        MCTSPlayer retValue = new MCTSPlayer((MCTSParams) getParameters().copy(), toString());
+        MCTSPlayer retValue = new MCTSPlayer((MCTSParams) getParameters().copy());
         if (getForwardModel() != null)
-            retValue.setForwardModel(getForwardModel());
+            retValue.setForwardModel(getForwardModel().copy());
         return retValue;
     }
 
@@ -359,15 +352,6 @@ public class MCTSPlayer extends AbstractPlayer implements IAnyTimePlayer, IHasSt
     @Override
     public int getBudget() {
         return parameters.budget;
-    }
-
-    @Override
-    public void setStateHeuristic(IStateHeuristic heuristic) {
-        getParameters().setParameterValue("heuristic", heuristic);
-    }
-    @Override
-    public IStateHeuristic getStateHeuristic() {
-        return getParameters().heuristic;
     }
 
     @Override

@@ -48,23 +48,17 @@ public class CantStopGameState extends AbstractGameState implements IPrintable {
         dice.forEach(d -> d.roll(rnd));
     }
 
-    /**
-     * True if the specified number track is complete and has been scored
-     **/
-    public boolean isTrackComplete(int n) {
+    public boolean trackComplete(int n) {
         return completedColumns[n];
     }
 
     public void moveMarker(int n) {
-        if (!isTrackComplete(n)) {
+        if (!trackComplete(n)) {
             int currentPosition = temporaryMarkerPositions.getOrDefault(n, playerMarkerPositions[getCurrentPlayer()][n]);
             temporaryMarkerPositions.put(n, currentPosition + 1);
         }
     }
 
-    /**
-     * Returns the current dice roll as an int[2]
-     **/
     public int[] getDice() {
         return dice.stream().mapToInt(Dice::getValue).toArray();
     }
@@ -77,23 +71,14 @@ public class CantStopGameState extends AbstractGameState implements IPrintable {
         }
     }
 
-    /**
-     * The current marker position for the specified player and number track
-     **/
     public int getMarkerPosition(int number, int player) {
         return playerMarkerPositions[player][number];
     }
 
-    /**
-     * The temporary marker position for the current player on the specified number track
-     **/
     public int getTemporaryMarkerPosition(int number) {
         return temporaryMarkerPositions.getOrDefault(number, 0);
     }
 
-    /**
-     * The numbers of the tracks that have had markers moved in the current turn
-     **/
     public List<Integer> getMarkersMoved() {
         return new ArrayList<>(temporaryMarkerPositions.keySet());
     }
@@ -199,7 +184,7 @@ public class CantStopGameState extends AbstractGameState implements IPrintable {
         sb.append("Max\n");
         for (int n = 2; n <= 12; n++) {
             sb.append(String.format("%2d :\t", n));
-            if (isTrackComplete(n))
+            if (trackComplete(n))
                 sb.append(" COMPLETED");
             else {
                 for (int p = 0; p < getNPlayers(); p++) {

@@ -24,7 +24,7 @@ public class Bet extends AbstractAction implements IPrintable {
         pgs.getPlayerNeedsToCall()[playerId] = false;
 
         // Others can't check
-        pgs.getPlayerMustCall(playerId);
+        pgs.otherPlayerMustCall(playerId);
 
         return true;
     }

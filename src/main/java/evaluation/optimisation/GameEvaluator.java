@@ -5,10 +5,10 @@ import core.AbstractPlayer;
 import core.Game;
 import core.interfaces.IGameHeuristic;
 import core.interfaces.IStateHeuristic;
+import core.interfaces.IStatisticLogger;
 import evaluation.listeners.IGameListener;
-import evaluation.optimisation.ntbea.AgentSearchSpace;
-import evaluation.optimisation.ntbea.SearchSpace;
-import evaluation.optimisation.ntbea.SolutionEvaluator;
+import evodef.SearchSpace;
+import evodef.SolutionEvaluator;
 import games.GameType;
 import players.IAnyTimePlayer;
 
@@ -31,7 +31,7 @@ public class GameEvaluator implements SolutionEvaluator {
     public boolean debug = false;
     GameType game;
     AbstractParameters gameParams;
-    AgentSearchSpace<?> searchSpace;
+    ITPSearchSpace searchSpace;
     int nPlayers;
     List<AbstractPlayer> opponents;
     int nEvals = 0;
@@ -63,7 +63,7 @@ public class GameEvaluator implements SolutionEvaluator {
         this.game = game;
         this.params = params;
         this.gameParams = params.gameParams;
-        this.searchSpace = (ITPSearchSpace<?>) params.searchSpace;
+        this.searchSpace = params.searchSpace;
         this.nPlayers = nPlayers;
         this.stateHeuristic = stateHeuristic;
         this.gameHeuristic = gameHeuristic;
@@ -77,6 +77,11 @@ public class GameEvaluator implements SolutionEvaluator {
     @Override
     public void reset() {
         nEvals = 0;
+    }
+
+    @Override
+    public double evaluate(double[] doubles) {
+        throw new AssertionError("No need for implementation according to NTBEA library javadoc");
     }
 
     /**
@@ -93,7 +98,7 @@ public class GameEvaluator implements SolutionEvaluator {
         if (debug)
             System.out.printf("Starting evaluation %d of %s at %tT%n", nEvals,
                     Arrays.toString(settings), System.currentTimeMillis());
-        Object configuredThing = searchSpace.instantiate(settings);
+        Object configuredThing = searchSpace.getAgent(settings);
         boolean tuningPlayer = configuredThing instanceof AbstractPlayer;
         boolean tuningGame = configuredThing instanceof Game;
 
@@ -150,7 +155,7 @@ public class GameEvaluator implements SolutionEvaluator {
                 count = (count + 1) % nTeams;
                 allPlayers.add(opponents.get(oppIndex).copy());
             } else {
-                AbstractPlayer tunedPlayer = (AbstractPlayer) searchSpace.instantiate(settings); // we create for each, in case this is coop
+                AbstractPlayer tunedPlayer = (AbstractPlayer) searchSpace.getAgent(settings); // we create for each, in case this is coop
                 allPlayers.add(tunedPlayer);
             }
         }

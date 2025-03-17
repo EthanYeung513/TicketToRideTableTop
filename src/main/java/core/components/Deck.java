@@ -19,8 +19,8 @@ import static core.CoreConstants.VisibilityMode;
  * A deck is defined as a "group of components". Examples of decks are:
  * * A hand of components
  * * A deck to draw from
- * * Components played on the player's area
- * * Discard pile
+ * * components played on the player's area
+ * * Discomponent pile
  */
 public class Deck<T extends Component> extends Component implements IComponentContainer<T>, Iterable<T> {
 
@@ -288,7 +288,6 @@ public class Deck<T extends Component> extends Component implements IComponentCo
         return false;
     }
 
-
     /**
      * Remove the component at the given index.
      *
@@ -489,7 +488,7 @@ public class Deck<T extends Component> extends Component implements IComponentCo
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(capacity, ownerId, componentID, components);
     }
 

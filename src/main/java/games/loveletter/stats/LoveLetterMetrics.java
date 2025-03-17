@@ -12,7 +12,6 @@ import evaluation.metrics.IMetricsCollection;
 import games.loveletter.LoveLetterGameState;
 import games.loveletter.actions.PlayCard;
 import games.loveletter.actions.PrinceAction;
-import games.loveletter.cards.CardType;
 import games.loveletter.cards.LoveLetterCard;
 
 import java.util.*;
@@ -42,12 +41,12 @@ public class LoveLetterMetrics implements IMetricsCollection {
                 String playerName = listener.getGame().getPlayers().get(e.playerID).toString();
                 boolean record = false;
 
-                if (pc.getCardType() == CardType.King) {
+                if (pc.getCardType() == LoveLetterCard.CardType.King) {
                     // Check other card in hand before king trade
                     String otherCard = null;
                     LoveLetterGameState gs = (LoveLetterGameState) e.state;
                     for (LoveLetterCard card : gs.getPlayerHandCards().get(e.playerID).getComponents()) {
-                        if (card.cardType != CardType.King) {
+                        if (card.cardType != LoveLetterCard.CardType.King) {
                             otherCard = card.cardType.name();
                             break;
                         }
@@ -55,12 +54,12 @@ public class LoveLetterMetrics implements IMetricsCollection {
                     records.put(playerName + "-KingTradedCard", otherCard);
                     record = true;
 
-                } else if (pc.getCardType() == CardType.Countess) {
+                } else if (pc.getCardType() == LoveLetterCard.CardType.Countess) {
                     // Check countess play not forced, if before play countess, player has prince or king
                     boolean forced = false;
                     LoveLetterGameState gs = (LoveLetterGameState) e.state;
                     for (LoveLetterCard card : gs.getPlayerHandCards().get(e.playerID).getComponents()) {
-                        if (card.cardType == CardType.Prince || card.cardType == CardType.King) {
+                        if (card.cardType == LoveLetterCard.CardType.Prince || card.cardType == LoveLetterCard.CardType.King) {
                             forced = true;
                             break;
                         }
@@ -96,7 +95,7 @@ public class LoveLetterMetrics implements IMetricsCollection {
 
     public static class CardStatsGameEvent extends AbstractMetric {
         Set<String> playerNames;
-        CardType cardPlayed = null;
+        LoveLetterCard.CardType cardPlayed = null;
         boolean successfulPlay = false;
 
         @Override
@@ -118,15 +117,15 @@ public class LoveLetterMetrics implements IMetricsCollection {
                 int killed = Integer.parseInt(text[1].trim());
                 int activePlayer = Integer.parseInt(text[3].trim());
 
-                cardPlayed = CardType.valueOf(text[2].trim());
+                cardPlayed = LoveLetterCard.CardType.valueOf(text[2].trim());
                 successfulPlay = activePlayer != killed;
 
                 return false;
             } else {
                 // On action taken, we check if game event triggered before and set successful use of card
                 if (e.action instanceof PlayCard) {
-                    CardType cardType = ((PlayCard) e.action).getCardType();
-                    if (cardType == CardType.Guard || cardType == CardType.Baron) {
+                    LoveLetterCard.CardType cardType = ((PlayCard) e.action).getCardType();
+                    if (cardType == LoveLetterCard.CardType.Guard || cardType == LoveLetterCard.CardType.Baron) {
                         String playerName = listener.getGame().getPlayers().get(e.playerID).toString();
                         if (cardPlayed != null && cardPlayed == cardType) {
                             records.put(playerName + "-" + cardType.name() + "Success", successfulPlay ? 1 : 0);
@@ -271,7 +270,7 @@ public class LoveLetterMetrics implements IMetricsCollection {
             // 3. All players have the same card and same points in discard pile, they tie (cardType.tie).
 
             boolean sameCardInHand = false;
-            CardType cardType = null;
+            LoveLetterCard.CardType cardType = null;
             for (int i = 0; i < llgs.getNPlayers(); ++i) {
                 if (!eliminatedPlayers.contains(i)) {
                     if (cardType == null) {
@@ -338,7 +337,7 @@ public class LoveLetterMetrics implements IMetricsCollection {
             String[] text = ((LogEvent) e.action).text.split(":")[1].split(",");
             int killer = Integer.parseInt(text[0].trim());
             int killed = Integer.parseInt(text[1].trim());
-            CardType cardUsed = CardType.valueOf(text[2].trim());
+            LoveLetterCard.CardType cardUsed = LoveLetterCard.CardType.valueOf(text[2].trim());
             records.put("EliminatingCard", cardUsed + (killed == killer ? ".self" : ""));
             return true;
         }

@@ -23,7 +23,7 @@ public abstract class StandardForwardModel extends AbstractForwardModel {
         // in which case go to the next action
         // We can't just register with all items in the Stack, as this may represent some complex dependency
         // For example in Dominion where one can Throne Room a Throne Room, which then Thrones a Smithy
-        if (!currentState.actionsInProgress.isEmpty()) {
+        if (currentState.actionsInProgress.size() > 0) {
             IExtendedSequence topOfStack = currentState.actionsInProgress.peek();
             if (!topOfStack.equals(action)) {
                 topOfStack._afterAction(currentState, action);
@@ -95,7 +95,7 @@ public abstract class StandardForwardModel extends AbstractForwardModel {
         int turnOwner = gs.turnOwner;
         do {
             turnOwner = (turnOwner + 1) % gs.nPlayers;
-            if (turnOwner == gs.turnOwner && !gs.isNotTerminalForPlayer(turnOwner)) {
+            if (turnOwner == gs.turnOwner) {
                 throw new AssertionError("Infinite loop - apparently all players are terminal, but game state is not. " +
                         "Last action played: " + gs.getHistory().get(gs.getHistory().size() - 1));
             }
@@ -129,9 +129,8 @@ public abstract class StandardForwardModel extends AbstractForwardModel {
         if (gs.getGameParameters().maxRounds != -1 && gs.roundCounter == gs.getGameParameters().maxRounds) {
             endGame(gs); // we end the game validly
         } else if (gs.getGameParameters().timeoutRounds != -1 && gs.roundCounter == gs.getGameParameters().timeoutRounds) {
-            // then we override the Result to be Timeout
-            gs.setGameStatus(TIMEOUT);
             endGame(gs);
+            // then we override the Result to be Timeout
             gs.setGameStatus(TIMEOUT);
             Arrays.fill(gs.playerResults, TIMEOUT);
         } else {
@@ -147,5 +146,15 @@ public abstract class StandardForwardModel extends AbstractForwardModel {
      */
     public final void endRound(AbstractGameState gs) {
         endRound(gs, gs.firstPlayer);
+    }
+
+    /**
+     * A Forward Model should be stateless - and hence have no need to implement a _copy() method
+     *
+     * @return this
+     */
+    @Override
+    public final StandardForwardModel _copy() {
+        return this;
     }
 }

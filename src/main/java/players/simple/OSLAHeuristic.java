@@ -29,7 +29,8 @@ public class OSLAHeuristic extends TunableParameters {
 
     @Override
     public void _reset() {
-        if (heuristic instanceof TunableParameters<?> tunableHeuristic) {
+        if (heuristic instanceof TunableParameters) {
+            TunableParameters tunableHeuristic = (TunableParameters) heuristic;
             for (String name : tunableHeuristic.getParameterNames()) {
                 tunableHeuristic.setParameterValue(name, this.getParameterValue("heuristic." + name));
             }

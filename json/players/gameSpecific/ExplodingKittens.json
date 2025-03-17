@@ -1,7 +1,7 @@
 {
   "budgetType": "BUDGET_TIME",
   "rolloutLength": 10,
-  "opponentTreePolicy": "OneTree",
+  "opponentTreePolicy": "SelfOnly",
   "MASTGamma": 0,
   "heuristic": {
     "class": "players.heuristics.OrdinalPosition"

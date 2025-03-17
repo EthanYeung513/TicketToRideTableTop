@@ -23,7 +23,7 @@ import java.awt.event.MouseEvent;
 import java.util.HashSet;
 
 import static gui.AbstractGUIManager.defaultItemSize;
-import static utilities.GUIUtils.*;
+import static games.terraformingmars.gui.Utils.*;
 
 public class TMCardView extends JComponent {
     Image production;

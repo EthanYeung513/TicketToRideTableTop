@@ -241,6 +241,8 @@ public class PokerGUIManager extends AbstractGUIManager {
         return wrapper;
     }
 
+
+    @Override
     protected JComponent createActionPanel(IScreenHighlight[] highlights, int width, int height, boolean boxLayout) {
         JPanel actionPanel = new JPanel();
         actionPanel.setOpaque(false);
@@ -320,7 +322,7 @@ public class PokerGUIManager extends AbstractGUIManager {
             for (int i = 0; i < gameState.getNPlayers(); i++) {
                 playerHands[i].update(pgs);
                 if (i == gameState.getCurrentPlayer() && coreParameters.alwaysDisplayCurrentPlayer
-                        || humanPlayerIds.contains(i)
+                        || humanPlayerId.contains(i)
                         || coreParameters.alwaysDisplayFullObservable) {
                     playerHands[i].setFront(true);
                     playerHands[i].setFocusable(true);

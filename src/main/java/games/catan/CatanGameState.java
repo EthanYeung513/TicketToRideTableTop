@@ -28,12 +28,11 @@ public class CatanGameState extends AbstractGameState {
     protected int longestRoadOwner; // playerID of the player currently holding the longest road
     protected int longestRoadLength, largestArmySize;
     int rollValue;
-    Random diceRnd;
 
     List<Map<CatanParameters.Resource, Counter>> playerResources;
     List<Map<BuyAction.BuyType, Counter>> playerTokens;
     List<Deck<CatanCard>> playerDevCards;
-    Map<CatanParameters.Resource, Counter> resourcePool;
+    HashMap<CatanParameters.Resource, Counter> resourcePool;
     Deck<CatanCard> devCards;
     boolean developmentCardPlayed; // Tracks whether a player has played a development card this turn
 
@@ -41,7 +40,6 @@ public class CatanGameState extends AbstractGameState {
     public int negotiationStepsCount;
     public int nTradesThisTurn;
 
-    // Details of the current trade offer (if any, may be null)
     public AbstractAction getTradeOffer() {
         return tradeOffer;
     }
@@ -87,7 +85,7 @@ public class CatanGameState extends AbstractGameState {
 
     @Override
     protected List<Component> _getAllComponents() {
-        return new ArrayList<>() {{
+        return new ArrayList<Component>() {{
             add(catanGraph);
             for (int i = 0; i < nPlayers; i++) {
                 addAll(exchangeRates.get(i).values());
@@ -143,7 +141,6 @@ public class CatanGameState extends AbstractGameState {
         this.rollValue = rollValue;
     }
 
-    // value of the currently rolled dice
     public int getRollValue() {
         return rollValue;
     }
@@ -181,7 +178,6 @@ public class CatanGameState extends AbstractGameState {
         }
     }
 
-    // The number of knights that each player has
     public int[] getKnights() {
         return Arrays.copyOf(knights, knights.length);
     }
@@ -240,7 +236,6 @@ public class CatanGameState extends AbstractGameState {
         return exchangeRates.get(playerID);
     }
 
-    // The road distance between two adjacent settlements, one at x, y, the other along the specified edgeIdx
     public int getRoadDistance(int x, int y, int edgeIdx) {
         // As the settlements are the nodes, we expand them to find roads
         // calculates the distance length of the road
@@ -309,7 +304,6 @@ public class CatanGameState extends AbstractGameState {
         return expandRoad(roadSet, unexpanded, expanded);
     }
 
-    // The number of resource cards in a player's hand
     public int getNResourcesInHand(int player) {
         int deckSize = 0;
         for (Map.Entry<CatanParameters.Resource, Counter> e: playerResources.get(player).entrySet()) {
@@ -414,8 +408,6 @@ public class CatanGameState extends AbstractGameState {
 
         copy.tradeOffer = tradeOffer != null? tradeOffer.copy() : null;
         copy.negotiationStepsCount = negotiationStepsCount;
-
-        copy.diceRnd = new Random(redeterminisationRnd.nextLong());
 
         copy.devCards = devCards.copy();
 
@@ -565,7 +557,7 @@ public class CatanGameState extends AbstractGameState {
         }
     }
 
-    public Map<CatanParameters.Resource, Counter> getResourcePool() {
+    public HashMap<CatanParameters.Resource, Counter> getResourcePool() {
         return resourcePool;
     }
 
@@ -595,15 +587,17 @@ public class CatanGameState extends AbstractGameState {
 
     /**
      * Check if can place road on edge of tile
-     * @param edge - Edge
+     * @param edgeIdx- index of the edge on tile
      * @param tile- tile on which we would like to build a road
      * @param player- playerID
      * @return true if can place road on given edge, false otherwise
      */
-    public boolean checkRoadPlacement(CatanTile tile, int v1, int v2, Edge edge, int player) {
+    public boolean checkRoadPlacement(int edgeIdx, CatanTile tile, int player) {
         GraphBoardWithEdges graph = getGraph();
-        BoardNodeWithEdges origin = graph.getNodeByID(tile.getVerticesBoardNodeIDs()[v1]);
-        BoardNodeWithEdges end = graph.getNodeByID(tile.getVerticesBoardNodeIDs()[v2]);
+        BoardNodeWithEdges origin = graph.getNodeByID(tile.getVerticesBoardNodeIDs()[edgeIdx]);  // this is one node connected with this edge
+        Edge edge = origin.getEdgeByID(tile.getEdgeIDs()[edgeIdx]);
+        BoardNodeWithEdges end = origin.getNeighbour(edge);  // this is one node connected with this edge
+
 
         // check if road is already taken
         if (edge == null || edge.getOwnerId() != -1) {
@@ -615,14 +609,11 @@ public class CatanGameState extends AbstractGameState {
             return true;
         }
 
-        // check if there is a road of ours on a neighbouring edge
-        for (Edge rd : origin.getEdges()) {
-            if (rd.getOwnerId() == player) {
-                return true;
-            }
-        }
-        for (Edge rd : end.getEdges()) {
-            if (rd.getOwnerId() == player) {
+        // check if there is a road on a neighbouring edge
+        Set<Edge> roads = origin.getEdges();
+        roads.addAll(end.getEdges());
+        for (Edge rd : roads) {
+            if (!rd.equals(edge) && rd.getOwnerId() == player) {
                 return true;
             }
         }

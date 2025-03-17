@@ -96,8 +96,6 @@ public class Area extends Component implements IComponentContainer<Component> {
      * @param component - component to add to the collection.
      */
     public void putComponent(Component component) {
-        if (component == null) return;
-
         this.components.put(component.getComponentID(), component);
         if (component instanceof IComponentContainer) {
             for (Component nestedC : ((IComponentContainer<?>) component).getComponents()) {

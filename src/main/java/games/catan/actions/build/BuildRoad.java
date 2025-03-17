@@ -18,27 +18,22 @@ public class BuildRoad extends AbstractAction {
     public final int edge;
     public final int playerID;
     public final boolean free;
-    public final int componentID;
 
-    public BuildRoad(int x, int y, int edge, int playerID, boolean free, int componentID) {
+    public BuildRoad(int x, int y, int edge, int playerID, boolean free) {
         this.x = x;
         this.y = y;
         this.edge = edge;
         this.playerID = playerID;
         this.free = free;
-        this.componentID = componentID;
     }
 
     @Override
     public boolean execute(AbstractGameState gs) {
         CatanGameState cgs = (CatanGameState) gs;
         CatanParameters cp = (CatanParameters) gs.getGameParameters();
-        CatanTile tile = cgs.getBoard()[x][y];
-        Edge road = cgs.getRoad(tile, edge, edge);
-        if (road.getComponentID() != componentID) {
-            throw new AssertionError("Road component ID mismatch: " + road.getComponentID() + " != " + componentID);
-        }
-        if (road.getOwnerId() == -1) {
+        CatanTile[][] board = cgs.getBoard();
+        Edge edgeObj = cgs.getRoad(board[x][y], edge, edge);
+        if (edgeObj.getOwnerId() == -1) {
             Counter roadTokens = cgs.getPlayerTokens().get(playerID).get(BuyAction.BuyType.Road);
             if (roadTokens.isMaximum()) {
                 return false;  // TODO investigate why this is reached
@@ -52,7 +47,7 @@ public class BuildRoad extends AbstractAction {
                 }
             }
             roadTokens.increment();
-            road.setOwnerId(playerID);
+            edgeObj.setOwnerId(playerID);
 
             // Check longest road
             int new_length = cgs.getRoadDistance(x, y, edge);
@@ -87,17 +82,16 @@ public class BuildRoad extends AbstractAction {
 
     @Override
     public boolean equals(Object other) {
-        // equality does not actually depend on x, y and edge...it really just needs to use the edge componentID
-        // as the road is the same if built from one hex, or from another next door that shares the edge
-        if (other instanceof BuildRoad otherAction) {
-            return playerID == otherAction.playerID && free == otherAction.free && componentID == otherAction.componentID;
+        if (other instanceof BuildRoad) {
+            BuildRoad otherAction = (BuildRoad) other;
+            return x == otherAction.x && y == otherAction.y && edge == otherAction.edge && playerID == otherAction.playerID && free == otherAction.free;
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(playerID, free, componentID);
+        return Objects.hash(x, y, edge, playerID, free);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package games.connect4;
 import core.AbstractGameState;
-import core.components.BoardNode;
 import core.components.Token;
 import core.interfaces.IStateFeatureVector;
 import core.interfaces.IStateKey;
@@ -17,10 +16,10 @@ public class Connect4StateVector implements IStateFeatureVector, IStateKey {
     @Override
     public double[] featureVector(AbstractGameState gs, int playerID) {
         Connect4GameState state = (Connect4GameState) gs;
-        String playerChar = Connect4Constants.playerMapping.get(playerID).getComponentName();
+        String playerChar = Connect4Constants.playerMapping.get(playerID).getTokenType();
 
         return Arrays.stream(state.gridBoard.flattenGrid()).mapToDouble(c -> {
-            String pos = c.getComponentName();
+            String pos = ((Token) c).getTokenType();
             if (pos.equals(playerChar)) {
                 return 1.0;
             } else if (pos.equals(Connect4Constants.emptyCell)) {

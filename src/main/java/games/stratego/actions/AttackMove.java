@@ -43,9 +43,10 @@ public class AttackMove extends Move {
         boolean destinationTileEmptied = true;
         boolean destinationTileSet = true;
 
-        GridBoard board = ((StrategoGameState)gs).getGridBoard();
+        GridBoard<Piece> board = ((StrategoGameState)gs).getGridBoard();
         Piece movedPiece = getPiece((StrategoGameState) gs);
         Piece attackedPiece = getAttackedPiece((StrategoGameState) gs);
+
         int movedPieceRank = movedPiece.getPieceRank();
         int attackedPieceRank = attackedPiece.getPieceRank();
         movedPiece.setPieceKnown(true);
@@ -195,7 +196,7 @@ public class AttackMove extends Move {
 
     public Piece getAttackedPiece(StrategoGameState gs) {
         if (attackedPosition != null) {
-            return (Piece) gs.getGridBoard().getElement(attackedPosition.getX(), attackedPosition.getY());
+            return gs.getGridBoard().getElement(attackedPosition.getX(), attackedPosition.getY());
         } else {
             return (Piece) gs.getComponentById(attackedPieceID);
         }

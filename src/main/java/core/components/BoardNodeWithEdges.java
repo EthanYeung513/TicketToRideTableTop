@@ -53,14 +53,8 @@ public class BoardNodeWithEdges extends Component {
         return neighbourEdgeMapping;
     }
 
-
-    /**
-     * This returns the set of edges. Do NOT modify this set, as it will modify the internal state of the node.
-     * @return
-     */
     public Set<Edge> getEdges() {
-        // this does not create a new HashSet from the edges, as that is a surprisingly large drain on performance
-        return neighbourEdgeMapping.keySet();
+        return new HashSet<>(neighbourEdgeMapping.keySet());
     }
 
     public void loadBoardNodeWithEdge(JSONObject node) {
@@ -77,7 +71,8 @@ public class BoardNodeWithEdges extends Component {
      */
     @Override
     public BoardNodeWithEdges copy() {
-        throw new UnsupportedOperationException("Copy method not implemented for BoardNodeWithEdges - implement in subclass");
+        // WARNING: DO not copy this directly, the GraphBoard copies it to correctly assign neighbour references!
+        return null;
     }
 
     @Override
@@ -88,23 +83,15 @@ public class BoardNodeWithEdges extends Component {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o instanceof BoardNodeWithEdges bn) {
-            if (componentID != bn.componentID || ownerId != bn.ownerId) return false;
-            for (Edge e: neighbourEdgeMapping.keySet()) {
-                if (!bn.neighbourEdgeMapping.containsKey(e)) return false;
-            }
-            // then the other way
-            for (Edge e: bn.neighbourEdgeMapping.keySet()) {
-                if (!neighbourEdgeMapping.containsKey(e)) return false;
-            }
-            return true;
-        }
-        return false;
+        if (!(o instanceof BoardNodeWithEdges)) return false;
+        if (!super.equals(o)) return false;
+        BoardNodeWithEdges that = (BoardNodeWithEdges) o;
+        return Objects.equals(neighbourEdgeMapping, that.neighbourEdgeMapping);
     }
 
     @Override
     public int hashCode() {
-        return 3850 + componentID * 31 + ownerId;
+        return Objects.hash(componentID, ownerId);
     }
 
     public Edge getEdgeByID(int edgeID) {

@@ -11,7 +11,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
-import static evaluation.RunArg.*;
+import static evaluation.RunArg.game;
+import static evaluation.RunArg.parseConfig;
 import static utilities.Utils.getArg;
 
 public class ParameterSearch {
@@ -64,7 +65,20 @@ public class ParameterSearch {
         NTBEAParameters params = new NTBEAParameters(config);
         params.printSearchSpaceDetails();
 
-        NTBEA singleNTBEA = params.instantiate();
-        singleNTBEA.run();
+        switch (params.mode) {
+            case NTBEA:
+            case CoopNTBEA:
+            case StableNTBEA:
+                NTBEA singleNTBEA = new NTBEA(params, game, nPlayers);
+                singleNTBEA.run();
+                break;
+            case MultiNTBEA:
+                MultiNTBEA multiNTBEA = new MultiNTBEA(params, game, nPlayers);
+                multiNTBEA.run();
+                break;
+        }
+
     }
+
+
 }

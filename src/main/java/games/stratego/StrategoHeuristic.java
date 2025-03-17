@@ -2,7 +2,6 @@ package games.stratego;
 
 import core.AbstractGameState;
 import core.CoreConstants;
-import core.components.BoardNode;
 import core.interfaces.IStateHeuristic;
 import games.stratego.components.Piece;
 
@@ -35,8 +34,7 @@ public class StrategoHeuristic implements IStateHeuristic {
         double sumP = 0.0;
         double sumOpp = 0.0;
 
-        for (BoardNode p : state.gridBoard.getComponents()){
-            Piece piece = (Piece) p;
+        for (Piece piece : state.gridBoard.getComponents()){
             if (piece != null){
                 double pieceValue = piece.getPieceRank();
                 if (piece.getPieceType() == Piece.PieceType.BOMB) pieceValue = bombValue;

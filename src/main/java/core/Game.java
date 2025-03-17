@@ -9,7 +9,6 @@ import evaluation.listeners.IGameListener;
 import evaluation.metrics.Event;
 import evaluation.summarisers.TAGNumericStatSummary;
 import games.GameType;
-import games.pandemic.PandemicForwardModel;
 import gui.AbstractGUIManager;
 import gui.GUI;
 import gui.GamePanel;
@@ -17,22 +16,25 @@ import players.basicMCTS.BasicMCTSPlayer;
 import players.human.ActionController;
 import players.human.HumanConsolePlayer;
 import players.human.HumanGUIPlayer;
-import players.mcts.MCTSParams;
+import players.mcts.MCTSPlayer;
 import players.mcts.MCTSPlayer;
 import players.rmhc.RMHCParams;
 import players.rmhc.RMHCPlayer;
+import players.simple.FirstActionPlayer;
 import players.simple.OSLAPlayer;
 import players.simple.RandomPlayer;
 import utilities.Pair;
 import utilities.Utils;
 
-import javax.swing.Timer;
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static games.GameType.*;
 
 
 public class Game {
@@ -116,7 +118,6 @@ public class Game {
             AbstractParameters params = AbstractParameters.createFromFile(gameToPlay, parameterConfigFile);
             game = gameToPlay.createGameInstance(players.size(), seed, params);
         } else game = gameToPlay.createGameInstance(players.size(), seed);
-
         if (game == null)
             System.out.println("Error game: " + gameToPlay);
 
@@ -335,7 +336,7 @@ public class Game {
      *
      * @param gui - gui to update.
      */
-    public void updateGUI(AbstractGUIManager gui, JFrame frame) {
+    private void updateGUI(AbstractGUIManager gui, JFrame frame) {
         // synchronise on game to avoid updating GUI in middle of action being taken
         AbstractGameState gameState = getGameState();
         int currentPlayer = gameState.getCurrentPlayer();
@@ -358,42 +359,35 @@ public class Game {
      * @param newRandomSeed - random seed is updated in the game parameters object and used throughout the game.
      */
     public final void reset(List<AbstractPlayer> players, long newRandomSeed) {
-        if (debug) System.out.println("Game Seed: " + newRandomSeed);
         gameState.reset(newRandomSeed);
         forwardModel.abstractSetup(gameState);
-
-        // set forward models for all players
-        for (AbstractPlayer player : players) {
-            if (forwardModel instanceof PandemicForwardModel pfm)
-                player.setForwardModel(pfm.copy());
-            else
-                player.setForwardModel(this.forwardModel);
-        }
-
         if (players.size() == gameState.getNPlayers()) {
             this.players = players;
         } else if (players.isEmpty()) {
             // keep existing players
-        } else if (players.size() == gameState.nTeams) {
+        } else if (players.size() == gameState.nTeams){
             this.players = new ArrayList<>();
             // In this case we use (copies of) each agent for all players on the team
             // loop over each player; find out what team they are in; and add an agent copy
             for (int i = 0; i < gameState.getNPlayers(); i++) {
                 int team = gameState.getTeam(i);
                 AbstractPlayer player = players.get(team);
+                player.setForwardModel(this.forwardModel.copy());
                 this.players.add(player.copy());
             }
         } else
             throw new IllegalArgumentException("PlayerList provided to Game.reset() must be empty, or have the same number of entries as there are players");
-
         int id = 0;
         if (this.players != null)
             for (AbstractPlayer player : this.players) {
                 // Give player their ID
                 player.playerID = id++;
+                // Create a FM copy for this player (different random seed)
+                player.setForwardModel(this.forwardModel.copy());
                 // Create initial state observation
                 AbstractGameState observation = gameState.copy(player.playerID);
                 // Allow player to initialize
+
                 player.initializePlayer(observation);
             }
         int gameID = idFountain.incrementAndGet();
@@ -546,21 +540,10 @@ public class Game {
             if (gameState.getHistory().size() > 1) {
                 lastAction = gameState.getHistory().get(gameState.getHistory().size() - 1).b;
             }
-            if (debug) {
-                System.out.println("---\nActions in progress:");
-                for (IExtendedSequence action : actionsInProgress) {
-                    System.out.println(action);
-                }
-                System.out.println("---\nRecent History:");
-                List<Pair<Integer, AbstractAction>> history = gameState.getHistory();
-                for (int i = Math.max(0, history.size() - 10); i < history.size(); i++) {
-                    System.out.println(history.get(i));
-                }
-            }
             throw new AssertionError("No actions available for player " + activePlayer
                     + (lastAction != null ? ". Last action: " + lastAction.getClass().getSimpleName() + " (" + lastAction + ")" : ". No actions in history")
                     + ". Actions in progress: " + actionsInProgress.size()
-                    + (topOfStack != null ? ". Top of stack: " + topOfStack.getClass().getSimpleName() + " (" + (topOfStack instanceof AbstractAction ? ((AbstractAction) topOfStack).getString(gameState) : topOfStack) + ")" : ""));
+                    + (topOfStack != null ? ". Top of stack: " + topOfStack.getClass().getSimpleName() + " (" + topOfStack + ")" : ""));
 
         }
         actionComputeTime = (System.nanoTime() - s);
@@ -845,7 +828,7 @@ public class Game {
      * and then run this class.
      */
     public static void main(String[] args) {
-        String gameType = Utils.getArg(args, "game", "Descent2e");
+        String gameType = Utils.getArg(args, "game", "Pandemic");
         boolean useGUI = Utils.getArg(args, "gui", true);
         int turnPause = Utils.getArg(args, "turnPause", 0);
         long seed = Utils.getArg(args, "seed", System.currentTimeMillis());
@@ -853,25 +836,23 @@ public class Game {
 
         /* Set up players for the game */
         ArrayList<AbstractPlayer> players = new ArrayList<>();
-//        players.add(new RandomPlayer());
-//        players.add(new RandomPlayer());
-//        players.add(new BasicMCTSPlayer());
-//        players.add(new OSLAPlayer());
-//        players.add(new RMHCPlayer());
+        players.add(new RandomPlayer());
+        players.add(new RandomPlayer());
+        players.add(new BasicMCTSPlayer());
 
-        RMHCParams params = new RMHCParams();
-        params.horizon = 15;
-        params.discountFactor = 0.99;
-        params.heuristic = AbstractGameState::getHeuristicScore;
+//        RMHCParams params = new RMHCParams();
+//        params.horizon = 15;
+//        params.discountFactor = 0.99;
+//        params.heuristic = AbstractGameState::getHeuristicScore;
 //        AbstractPlayer rmhcPlayer = new RMHCPlayer(params);
 //        players.add(rmhcPlayer);
 
-//        MCTSParams mcts_params = new MCTSParams();
-//        players.add(new MCTSPlayer(mcts_params));
+//        MCTSParams params = new MCTSParams();
+//        players.add(new MCTSPlayer(params));
 
-        players.add(new HumanGUIPlayer(ac));
-        players.add(new HumanGUIPlayer(ac));
-        players.add(new HumanGUIPlayer(ac));
+//        players.add(new OSLAPlayer());
+//        players.add(new RMHCPlayer());
+//        players.add(new HumanGUIPlayer(ac));
 //        players.add(new HumanConsolePlayer());
 //        players.add(new FirstActionPlayer());
 

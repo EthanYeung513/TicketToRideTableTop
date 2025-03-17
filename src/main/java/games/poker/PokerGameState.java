@@ -139,16 +139,10 @@ public class PokerGameState extends AbstractGameState implements IPrintable {
         }
     }
 
-    /**
-     * This is a list of MoneyPots in player order
-     **/
     public List<MoneyPot> getMoneyPots() {
         return moneyPots;
     }
 
-    /**
-     * The currently visible community cards
-     **/
     public Deck<FrenchCard> getCommunityCards() {
         return communityCards;
     }
@@ -161,37 +155,22 @@ public class PokerGameState extends AbstractGameState implements IPrintable {
         return playerDecks;
     }
 
-    /**
-     * A boolean array in player order, true if player needs to call (can't just check)
-     **/
     public boolean[] getPlayerNeedsToCall() {
         return playerNeedsToCall;
     }
 
-    /**
-     * A boolean array in player order, true if player is 'All In'
-     **/
     public boolean[] getPlayerAllIn() {
         return playerAllIn;
     }
 
-    /**
-     * A boolean array in player order, true if player has folded
-     **/
     public boolean[] getPlayerFold() {
         return playerFold;
     }
 
-    /**
-     * An array in player order. Use Counter.getValue() to get the current money of the player
-     **/
     public Counter[] getPlayerMoney() {
         return playerMoney;
     }
 
-    /**
-     * An array in player order. Use Counter.getValue() to get the current bet of the player
-     **/
     public Counter[] getPlayerBet() {
         return playerBet;
     }
@@ -204,9 +183,6 @@ public class PokerGameState extends AbstractGameState implements IPrintable {
         this.bet = bet;
     }
 
-    /**
-     * The player id of the Big Blind
-     **/
     public int getBigId() {
         return bigId;
     }
@@ -220,7 +196,7 @@ public class PokerGameState extends AbstractGameState implements IPrintable {
         return getNextNonBankruptPlayer(getBigId(), -1);
     }
 
-    public boolean isPlayerStillToAct() {
+    public boolean playersLeftToAct() {
         for (int p = 0; p < getNPlayers(); p++) {
             if (playerFold[p] || playerAllIn[p] || getPlayerResults()[p] == LOSE_GAME)
                 continue;
@@ -230,7 +206,7 @@ public class PokerGameState extends AbstractGameState implements IPrintable {
         return false;
     }
 
-    public boolean isRoundOver() {
+    public boolean checkRoundOver() {
         int stillAlive = 0;
         for (int i = 0; i < getNPlayers(); i++) {
             if (getPlayerResults()[i] != LOSE_GAME && !playerFold[i] && !playerAllIn[i]) {
@@ -264,7 +240,7 @@ public class PokerGameState extends AbstractGameState implements IPrintable {
         return next;
     }
 
-    public void getPlayerMustCall(int playerId) {
+    public void otherPlayerMustCall(int playerId) {
         // Others can't check
         for (int i = 0; i < getNPlayers(); i++) {
             if (i != playerId && !playerFold[i] && !playerAllIn[i] && getPlayerResults()[i] != LOSE_GAME) {

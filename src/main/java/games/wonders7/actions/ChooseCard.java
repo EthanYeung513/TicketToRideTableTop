@@ -10,7 +10,7 @@ public class ChooseCard extends AbstractAction {
 
     // actionChosen must be immutable for this to work!
     // (All 7-Wonders actions are as of 30-Oct-23)
-    public final AbstractAction actionChosen;
+    final AbstractAction actionChosen;
 
     public ChooseCard(AbstractAction actionChosen) {
         this.actionChosen = actionChosen;

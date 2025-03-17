@@ -5,7 +5,6 @@ import core.CoreConstants;
 import core.components.PartialObservableDeck;
 import core.interfaces.IStateHeuristic;
 import evaluation.optimisation.TunableParameters;
-import games.loveletter.cards.CardType;
 import games.loveletter.cards.LoveLetterCard;
 import utilities.Utils;
 
@@ -13,7 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import static games.loveletter.cards.CardType.*;
+import static games.loveletter.cards.LoveLetterCard.CardType.*;
 
 public class LoveLetterHeuristic extends TunableParameters implements IStateHeuristic {
 
@@ -71,7 +70,7 @@ public class LoveLetterHeuristic extends TunableParameters implements IStateHeur
         }
         double cardValues = 0;
 
-        Set<CardType> cardTypes = new HashSet<>();
+        Set<LoveLetterCard.CardType> cardTypes = new HashSet<>();
         for (LoveLetterCard card : llgs.getPlayerHandCards().get(playerId).getComponents()) {
             cardValues += card.cardType.getValue();
             cardTypes.add(card.cardType);

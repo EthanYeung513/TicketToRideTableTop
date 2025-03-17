@@ -55,7 +55,7 @@ public abstract class Move extends AbstractAction {
 
     public Piece getPiece(StrategoGameState gs) {
         if (position != null) {
-            return (Piece) gs.getGridBoard().getElement(position.getX(), position.getY());
+            return gs.getGridBoard().getElement(position.getX(), position.getY());
         } else {
             return (Piece) gs.getComponentById(movedPieceID);
         }

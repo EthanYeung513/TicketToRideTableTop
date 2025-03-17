@@ -256,7 +256,9 @@ public class ResForwardModel extends StandardForwardModel {
             resgs.historicTeams.add(new ArrayList<>(resgs.finalTeamChoice));
             resgs.noVotesPerMission.add(occurrenceCount);
         }
+
     }
+
 
     @Override
     protected void endGame(AbstractGameState gs) {
@@ -269,6 +271,7 @@ public class ResForwardModel extends StandardForwardModel {
     public void changeLeader(ResGameState resgs) {
         resgs.leaderID = (resgs.leaderID + 1) % resgs.getNPlayers();
     }
+
 
     public static List<Boolean> randomiseSpies(int spies, ResGameState state, int playerID, Random rnd) {
         // We want to randomly assign the number of spies across the total number of players

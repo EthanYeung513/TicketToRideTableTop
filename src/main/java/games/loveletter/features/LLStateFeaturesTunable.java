@@ -4,7 +4,6 @@ import core.AbstractGameState;
 import core.components.PartialObservableDeck;
 import evaluation.features.TunableStateFeatures;
 import games.loveletter.LoveLetterGameState;
-import games.loveletter.cards.CardType;
 import games.loveletter.cards.LoveLetterCard;
 
 import java.util.HashSet;
@@ -12,7 +11,7 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 import static core.CoreConstants.GameResult.LOSE_ROUND;
-import static games.loveletter.cards.CardType.*;
+import static games.loveletter.cards.LoveLetterCard.CardType.*;
 
 /**
  * A set of features designed to tie in exactly with those used in LoveLetterHeuristic
@@ -38,7 +37,7 @@ public class LLStateFeaturesTunable extends TunableStateFeatures {
 
         double cardValues = 0;
 
-        Set<CardType> cardTypes = new HashSet<>();
+        Set<LoveLetterCard.CardType> cardTypes = new HashSet<>();
         if (active[0]) {
             for (LoveLetterCard card : llgs.getPlayerHandCards().get(playerId).getComponents()) {
                 cardValues += card.cardType.getValue();

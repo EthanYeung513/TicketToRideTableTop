@@ -6,7 +6,6 @@ import games.wonders7.Wonders7GameState;
 import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
-import java.util.Map;
 
 public class PlayerView extends JComponent {
     Wonders7GameState gs;
@@ -32,7 +31,7 @@ public class PlayerView extends JComponent {
             - Wonder board
          */
         int fontSize = g.getFont().getSize();
-        Map<Wonders7Constants.Resource, Integer> playerResources = gs.getPlayerResources(playerId);
+        HashMap<Wonders7Constants.Resource, Integer> playerResources = gs.getPlayerResources(playerId);
 
         g.drawRect(pad,pad,width-pad*2, height-pad*2-borderHeight);
         int y = pad*2 + fontSize;

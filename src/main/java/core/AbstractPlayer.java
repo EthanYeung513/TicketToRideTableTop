@@ -91,6 +91,7 @@ public abstract class AbstractPlayer {
             model.addPlayerDecorator(decorator);
         }
     }
+
     /**
      * Retrieves the forward model for current game being played.
      *
