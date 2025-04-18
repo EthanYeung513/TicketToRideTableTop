@@ -10,6 +10,8 @@ import players.rmhc.RMHCParams;
 import players.rmhc.RMHCPlayer;
 import players.simple.OSLAPlayer;
 import players.simple.RandomPlayer;
+import players.simple.TicketToRideMLRAPlayer;
+import players.simple.TicketToRideSRAPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.Random;
 
 import static core.CoreConstants.*;
 import static players.PlayerType.Property.*;
+
 
 /**
  * Encapsulates all players available in the framework.
@@ -34,7 +37,9 @@ public enum PlayerType {
     Random (new ArrayList<Property>() {{ add(Simple); add(Stochastic); }}),
     OSLA (new ArrayList<Property>() {{ add(Simple); add(Stochastic); add(ForwardPlanning); add(Greedy); }}),
     MCTS (new ArrayList<Property>() {{ add(Stochastic); add(ForwardPlanning); add(TreeSearch); }}),
-    RMHC (new ArrayList<Property>() {{ add(Stochastic); add(ForwardPlanning); add(EvolutionaryAlgorithm); }});
+    RMHC (new ArrayList<Property>() {{ add(Stochastic); add(ForwardPlanning); add(EvolutionaryAlgorithm); }}),
+    TicketToRideMLRAPlayer (new ArrayList<Property>() {{ add(Simple); }}),
+    TicketToRideSRAPlayer (new ArrayList<Property>() {{ add(Simple); }});
 
     /**
      * Converts a given string to the enum type corresponding to the player.
@@ -56,6 +61,10 @@ public enum PlayerType {
                 return HumanConsolePlayer;
             case "gui":
                 return HumanGUIPlayer;
+            case "mlra":
+                return TicketToRideMLRAPlayer;
+            case "sra":
+                return TicketToRideSRAPlayer;
         }
         System.out.println("Player type not found, returning null. ");
         return null;
@@ -100,6 +109,12 @@ public enum PlayerType {
                     params = new RMHCParams();
                 }
                 player = new RMHCPlayer((RMHCParams) params);
+                break;
+            case TicketToRideMLRAPlayer:
+                player = new TicketToRideMLRAPlayer();
+                break;
+            case TicketToRideSRAPlayer:
+                player = new TicketToRideSRAPlayer();
                 break;
         }
 

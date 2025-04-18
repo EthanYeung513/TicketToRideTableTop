@@ -54,7 +54,6 @@ public class TicketToRideGUIManager extends AbstractGUIManager implements IScree
     TicketToRideCardView[] playerCards;
     JLabel[][] playerHandCardCounts;
     ArrayList<TicketToRideCardView>[] playerHands;
-    ArrayList<TicketToRideCardView> bufferDeck;
     TicketToRideBoardView boardView;
 
 
@@ -74,9 +73,8 @@ public class TicketToRideGUIManager extends AbstractGUIManager implements IScree
 
 
 
-    JLabel gameTurnStep;
 
-    public TicketToRideGUIManager(GamePanel parent, Game game, ActionController ac, Set<Integer> human) {
+    public TicketToRideGUIManager(GamePanel parent, Game game, ActionController  ac, Set<Integer> human) {
         super(parent, game, ac, human);
         if (game == null) return;
 
@@ -89,11 +87,10 @@ public class TicketToRideGUIManager extends AbstractGUIManager implements IScree
         boardView = new TicketToRideBoardView(gameState);
 
 
-        gameTurnStep = new JLabel();
 
         JPanel gameStateInfo = createGameStateInfoPanel(gameState);
         JPanel playerAreas = createPlayerAreas();
-        JComponent actionPanel = createActionPanel(new IScreenHighlight[]{ this}, 259, 80, this::bufferReset);
+        JComponent actionPanel = createActionPanel(new IScreenHighlight[]{ this}, 259, 80, true);
         JPanel side = new JPanel();
         side.setLayout(new BoxLayout(side, BoxLayout.Y_AXIS));
         side.add(gameStateInfo);
@@ -221,7 +218,7 @@ public class TicketToRideGUIManager extends AbstractGUIManager implements IScree
         gameInfo.add(gamePhase);
         gameInfo.add(turn);
         gameInfo.add(currentPlayer);
-        gameInfo.add(gameTurnStep);
+
 
         System.out.println();
 
@@ -321,37 +318,6 @@ public class TicketToRideGUIManager extends AbstractGUIManager implements IScree
         cardAreas.add(scrollPane1);
 //        cardAreas.add(playerAreas);
 
-        // Buffer deck space
-        JPanel bufferDeckArea = new JPanel();
-        bufferDeckArea.setLayout(new BoxLayout(bufferDeckArea, BoxLayout.X_AXIS));
-        bufferDeck = new ArrayList<>();
-        for (int i = 0; i < maxBufferCards; i++) {
-            TicketToRideCardView cv = new TicketToRideCardView(null);
-            int idx = i;
-            cv.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (e.getButton() == MouseEvent.BUTTON1) {
-                        bufferHighlights.add(idx);
-                        cv.setBorder(new LineBorder(Color.cyan, 2));
-                    } else {
-                        bufferHighlights.remove(Integer.valueOf(idx));
-                        cv.setBorder(null);
-                    }
-                }
-            });
-            cv.setVisible(false);
-            bufferDeck.add(cv);
-            bufferDeckArea.add(cv);
-        }
-
-        JScrollPane scrollPane = new JScrollPane(bufferDeckArea);
-        scrollPane.setMaximumSize(size);
-        scrollPane.setMinimumSize(size);
-        scrollPane.setPreferredSize(size);
-        scrollPane.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_ALWAYS);
-        scrollPane.setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_NEVER);
-        cardAreas.add(scrollPane);
 
         return cardAreas;
     }
@@ -376,11 +342,7 @@ public class TicketToRideGUIManager extends AbstractGUIManager implements IScree
         return cv2;
     }
 
-    private void bufferReset(ActionButton ab) {
-        for (TicketToRideCardView pcv: bufferDeck) {
-            pcv.setVisible(false);
-        }
-    }
+
 
     public void clearHighlights() {
 //        playerHighlights.clear();

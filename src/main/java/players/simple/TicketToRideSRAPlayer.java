@@ -1,4 +1,4 @@
-package games.tickettoride.player;
+package players.simple;
 
 import core.AbstractGameState;
 import core.AbstractPlayer;
@@ -8,21 +8,20 @@ import games.tickettoride.actions.ClaimRoute;
 import games.tickettoride.actions.DrawDestinationTicketCards;
 import games.tickettoride.actions.DrawTrainCards;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class RuleBasedPlayer extends AbstractPlayer {
+public class TicketToRideSRAPlayer extends AbstractPlayer {
 
     private final Random rnd;
 
 
-    int lowerBound = 3;
-    int upperBound = 4;
+    int lowerBound = 1;
+    int upperBound = 2;
 
-    public RuleBasedPlayer() {
-        super(null, "RuleBasedPlayer");
+    public TicketToRideSRAPlayer() {
+        super(null, "SRA");
         this.rnd = new Random();
     }
 
@@ -89,11 +88,11 @@ public class RuleBasedPlayer extends AbstractPlayer {
 
     @Override
     public String toString() {
-        return "RuleBasedPlayer";
+        return "SRA";
     }
 
     @Override
     public AbstractPlayer copy() {
-        return this;
+        return new TicketToRideSRAPlayer();
     }
 }

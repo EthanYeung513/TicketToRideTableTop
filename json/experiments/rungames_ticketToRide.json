@@ -1,0 +1,10 @@
+{
+  "game" : "TicketToRide",
+  "nPlayers" : 4,
+  "mode" : "random",
+  "matchups" : 8,
+  "verbose" : false,
+  "listener" : "json/listeners/basiclistener.json",
+  "destDir" : "outputdir",
+  "output" : "outputdir/Tournament.log"
+}

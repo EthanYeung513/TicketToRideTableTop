@@ -421,13 +421,13 @@ public class  TicketToRideGameState extends AbstractGameState {
             int pointsOnDestinationCard = ((PropertyInt)(currentCard.getProperty(pointsHash))).value;
             if (isConnected){
                 scoreToAddOrSubtract = scoreToAddOrSubtract + pointsOnDestinationCard;
-                System.out.println("adding due to connected: " +  pointsOnDestinationCard);
+                //System.out.println("adding due to connected: " +  pointsOnDestinationCard);
             } else {
                 scoreToAddOrSubtract = scoreToAddOrSubtract - pointsOnDestinationCard; //not connected reduce score
-                System.out.println("subtracting due to unconnected: " +  -pointsOnDestinationCard);
+                //System.out.println("subtracting due to unconnected: " +  -pointsOnDestinationCard);
             }
         }
-        System.out.println("total points due to destination ticket cards " + scoreToAddOrSubtract);
+        //System.out.println("total points due to destination ticket cards " + scoreToAddOrSubtract);
 
 
         /*System.out.println(boardEdges.size() + " board edges size");

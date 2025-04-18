@@ -47,7 +47,7 @@ public class DrawTrainCards extends AbstractAction {
      */
     @Override
     public boolean execute(AbstractGameState gs) {
-        System.out.println("PLAYER " + playerID + " DOING ACTION: DRAWING CARDS" );
+        //System.out.println("PLAYER " + playerID + " DOING ACTION: DRAWING CARDS" );
 
         TicketToRideGameState tgs = (TicketToRideGameState) gs;
         TicketToRideParameters tp = (TicketToRideParameters) gs.getGameParameters();

@@ -17,6 +17,8 @@ import players.mcts.MCTSPlayer;
 import players.rmhc.RMHCPlayer;
 import players.simple.OSLAPlayer;
 import players.simple.RandomPlayer;
+import players.simple.TicketToRideMLRAPlayer;
+import players.simple.TicketToRideSRAPlayer;
 import utilities.Pair;
 
 import java.io.File;
@@ -83,9 +85,11 @@ public class RunGames implements IGameRunner {
         } else {
        //     agents.add(new MCTSPlayer());
             agents.add(new BasicMCTSPlayer());
-            agents.add(new RandomPlayer());
-            agents.add(new RMHCPlayer());
             agents.add(new OSLAPlayer());
+            agents.add(new RandomPlayer());
+            //agents.add(new TicketToRideMLRAPlayer());
+            agents.add(new TicketToRideSRAPlayer());
+
         }
         runGames.agents = agents;
 

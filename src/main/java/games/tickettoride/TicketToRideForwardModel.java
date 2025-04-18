@@ -119,8 +119,8 @@ public class TicketToRideForwardModel extends StandardForwardModel {
                 new DrawCard(destinationCardDeck.getComponentID(), playerDestinationCardHandDeck.getComponentID()).execute(state);
             }
 
-            System.out.println("Setup: player " + i + " has destination card " + playerDestinationCardHandDeck.peek().getProperty(pointsHash));
-            System.out.println("Setup: player " + i + " has " + playerTrainCardHandDeck);
+            //System.out.println("Setup: player " + i + " has destination card " + playerDestinationCardHandDeck.peek().getProperty(pointsHash));
+            //System.out.println("Setup: player " + i + " has " + playerTrainCardHandDeck);
         }
 
         state.setGamePhase(TicketToRideGameState.TicketToRideGamePhase.NormalGameRound);
@@ -177,7 +177,7 @@ public class TicketToRideForwardModel extends StandardForwardModel {
         Deck<Card> trainCardDiscardDeck = (Deck<Card>) tg.getComponent(trainCardDeckDiscardHash);
 
         if (playerTrainCardDeck.getSize() < 2){ // shuffle discard into deck
-            System.out.println("Shuffle discard into deck before" + " train card size:" + playerTrainCardDeck.getSize() + " discard size: " + trainCardDiscardDeck.getSize());
+            //System.out.println("Shuffle discard into deck before" + " train card size:" + playerTrainCardDeck.getSize() + " discard size: " + trainCardDiscardDeck.getSize());
             trainCardDiscardDeck.shuffle(tg.getRnd());
             playerTrainCardDeck.add(trainCardDiscardDeck);
             trainCardDiscardDeck.clear();
@@ -265,16 +265,16 @@ public class TicketToRideForwardModel extends StandardForwardModel {
         TicketToRideGameState.TicketToRideGamePhase gamePhase = (TicketToRideGameState.TicketToRideGamePhase) gs.getGamePhase();
         if (currentTrainCars <= 2 && gamePhase != TicketToRideGameState.TicketToRideGamePhase.FinalRound){ //trigger final round
             gs.setGamePhase(TicketToRideGameState.TicketToRideGamePhase.FinalRound);
-            System.out.println("NOW IN FINAL ROUND: player " + playerId + " with train cars: " + currentTrainCars );
+            //System.out.println("NOW IN FINAL ROUND: player " + playerId + " with train cars: " + currentTrainCars );
         } else if (gamePhase == TicketToRideGameState.TicketToRideGamePhase.FinalRound) { //already in final round
             gs.setCurrentFinalRoundTurn(gs.getCurrentFinalRoundTurn() + 1);
-            System.out.println("Final round for player " + gs.getCurrentPlayer());
+            //System.out.println("Final round for player " + gs.getCurrentPlayer());
             if (gs.getCurrentFinalRoundTurn() == gs.getNPlayers()){ //all final turns have been taken
-                System.out.println("GAME ENDED");
+                //System.out.println("GAME ENDED");
                 int numOfPlayers = gs.getNPlayers() - 1;
                 for (int currentPlayer = 0; currentPlayer <= numOfPlayers; currentPlayer++) {
                     int scoreToAddOrSubtract = gs.calculateDestinationCardPoints(currentPlayer);
-                    System.out.println("scoreToAddOrSubtract: " + scoreToAddOrSubtract);
+                    //System.out.println("scoreToAddOrSubtract: " + scoreToAddOrSubtract);
                     gs.addScore(currentPlayer,scoreToAddOrSubtract);
 
 

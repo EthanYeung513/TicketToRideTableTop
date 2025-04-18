@@ -78,7 +78,7 @@ public class ClaimRoute extends AbstractAction {
 
         String colorOfRouteToRemove = colorOfRoute; // could change incase of gray route
 
-        System.out.println("PLAYER " + playerID + " DOING ACTION: CLAIMING ROUTE" );
+        //System.out.println("PLAYER " + playerID + " DOING ACTION: CLAIMING ROUTE" );
         //System.out.println("route properties before : " + edge.getProperties());
         Deck<Card> playerTrainCardHandDeck = (Deck<Card>) tgs.getComponentActingPlayer(playerID,playerHandHash);
         Deck<Card> trainCardDiscardDeck = (Deck<Card>) tgs.getComponent(trainCardDeckDiscardHash);
@@ -153,7 +153,7 @@ public class ClaimRoute extends AbstractAction {
 
         //note to self: gray ones not setting properly cuz its always editing route1
         if (tgs.getNPlayers() >= 4){ //in 4+ players, double routes open up
-            System.out.println(tgs.getNPlayers() + " more than 4 players");
+            //System.out.println(tgs.getNPlayers() + " more than 4 players");
             if (claimedByPlayerRoute1 != -1 && claimedByPlayerRoute2 != -1) { //if both routes taken and double route enabled, its now completely closed off
                 edge.setProperty(routeClaimedProp);
                 //System.out.println(" double route claimed more than 4 players");

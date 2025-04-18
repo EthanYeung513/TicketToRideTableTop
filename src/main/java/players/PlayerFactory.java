@@ -11,6 +11,8 @@ import players.rmhc.RMHCParams;
 import players.rmhc.RMHCPlayer;
 import players.simple.OSLAPlayer;
 import players.simple.RandomPlayer;
+import players.simple.TicketToRideMLRAPlayer;
+import players.simple.TicketToRideSRAPlayer;
 import utilities.JSONUtils;
 
 import java.io.File;
@@ -113,6 +115,8 @@ public class PlayerFactory {
             case "mcts" -> new BasicMCTSPlayer();
             case "rmhc" -> new RMHCPlayer(new RMHCParams());
             case "rhea" -> new RHEAPlayer(new RHEAParams());
+            case "mlra" -> new TicketToRideMLRAPlayer();
+            case "sra" -> new TicketToRideSRAPlayer();
             default -> throw new AssertionError("Unknown file or player key : " + input);
         };
     }

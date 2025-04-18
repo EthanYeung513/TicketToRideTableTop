@@ -29,9 +29,9 @@ public class TicketToRideHeuristic extends TunableParameters implements IStateHe
 
         double heuristicScore = Math.max(0.0, Math.min(ttg.getScores()[playerId] / 100.0, 1.0));
         if (heuristicScore > 1){
-            System.out.println("HEURISTIC SCORE ERROR, MORE THAN 1");
+            //System.out.println("HEURISTIC SCORE ERROR, MORE THAN 1");
         } else {
-            System.out.println("heuristic score:" + heuristicScore);
+            //System.out.println("heuristic score:" + heuristicScore);
         }
 
         return heuristicScore;
