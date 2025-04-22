@@ -188,8 +188,9 @@ public class TicketToRideGUIManager extends AbstractGUIManager implements IScree
 
 
 
-            String[] playerCountInfo = new String[TicketToRideConstants.cardColors.length / 2 + 1];
+            String[] playerCountInfo = new String[TicketToRideConstants.cardColors.length / 2 + 2];
             playerCountInfo[playerCountInfo.length - 1] = "Train cars: " + this.gameState.getTrainCars(i);
+            playerCountInfo[playerCountInfo.length - 2] = "Current score: " + Math.round(this.gameState.getGameScore(i));
             int idx = -1;
             for (int c = 0; c < TicketToRideConstants.cardColors.length; c++) {
                 if (c % 2 == 0) idx++;
@@ -268,8 +269,9 @@ public class TicketToRideGUIManager extends AbstractGUIManager implements IScree
             wrapInfo.setPreferredSize(new Dimension(cardWidth, (int)(cardHeight*1.5)+offset));
             wrapInfo.setLayout(new BoxLayout(wrapInfo, BoxLayout.Y_AXIS));
 
-            String[] playerCountInfo = new String[TicketToRideConstants.cardColors.length/2+1];
+            String[] playerCountInfo = new String[TicketToRideConstants.cardColors.length/2+2];
             playerCountInfo[playerCountInfo.length-1] = "Train cars: ";
+            playerCountInfo[playerCountInfo.length-1] = "Current score: ";
             int idx = -1;
             for (int c = 0; c < TicketToRideConstants.cardColors.length; c++) {
                 if (c % 2 == 0) idx++;
