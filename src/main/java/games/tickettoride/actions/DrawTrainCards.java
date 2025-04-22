@@ -12,6 +12,8 @@ import games.tickettoride.TicketToRideConstants;
 import games.tickettoride.TicketToRideGameState;
 import games.tickettoride.TicketToRideParameters;
 
+import java.util.Objects;
+
 import static core.CoreConstants.playerHandHash;
 
 /**
@@ -89,8 +91,7 @@ public class DrawTrainCards extends AbstractAction {
 
     @Override
     public int hashCode() {
-        // TODO: return the hash of all other variables in the class
-        return 0;
+        return Objects.hash(playerID);
     }
 
     @Override

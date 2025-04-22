@@ -62,12 +62,12 @@ public class TicketToRideForwardModel extends StandardForwardModel {
             state.setTrainCars(i,tp.nInitialTrainCars); //default amount of train cars(35) per player, used to dictate end of game when <= 2
             Area playerArea = new Area(i, "Player Area");
             //Player Train Card hand setup
-            Deck<Card> playerTrainCardHand = new Deck<>("Player Train Card Hand", VISIBLE_TO_ALL);
+            Deck<Card> playerTrainCardHand = new Deck<>("Player Train Card Hand", HIDDEN_TO_ALL);
             playerTrainCardHand.setOwnerId(i);
             playerArea.putComponent(playerHandHash, playerTrainCardHand);
 
             //Destination card hand setup
-            Deck<Card> playerDestinationCardHand = new Deck<>("Player Destination Card Hand", VISIBLE_TO_ALL);
+            Deck<Card> playerDestinationCardHand = new Deck<>("Player Destination Card Hand", HIDDEN_TO_ALL);
             playerDestinationCardHand.setOwnerId(i);
             playerArea.putComponent(playerDestinationHandHash, playerDestinationCardHand);
 
@@ -88,7 +88,7 @@ public class TicketToRideForwardModel extends StandardForwardModel {
         Deck<Card> trainCardDeck = new Deck<>("Train Card Deck", HIDDEN_TO_ALL);
         Deck<Card> trainCardTypes = _data.findDeck("TrainCars");
         for (Card c: trainCardTypes) { //Add x number of each train card type
-            for (int i = 0; i < 25; i++) {
+            for (int i = 0; i < 50; i++) {
                 trainCardDeck.add(c);
             }
 
@@ -182,12 +182,15 @@ public class TicketToRideForwardModel extends StandardForwardModel {
             playerTrainCardDeck.add(trainCardDiscardDeck);
             trainCardDiscardDeck.clear();
 
-
         }
 
+        int deckSize = playerTrainCardDeck.getSize();
         if (playerTrainCardDeck.getSize() >= 2){ //to do: shuffle discard into deck
             actions.add(new DrawTrainCards(playerId));
+        } else {
+            actions.removeIf(a -> a instanceof DrawTrainCards);
         }
+
         if (playerDestinationCardDeck.getSize() > 1){
             actions.add(new DrawDestinationTicketCards(playerId));
         }
@@ -272,14 +275,38 @@ public class TicketToRideForwardModel extends StandardForwardModel {
             if (gs.getCurrentFinalRoundTurn() == gs.getNPlayers()){ //all final turns have been taken
                 //System.out.println("GAME ENDED");
                 int numOfPlayers = gs.getNPlayers() - 1;
-                for (int currentPlayer = 0; currentPlayer <= numOfPlayers; currentPlayer++) {
+                for (int currentPlayer = 0; currentPlayer <= numOfPlayers; currentPlayer++) {  //destination ticket card scores
                     int scoreToAddOrSubtract = gs.calculateDestinationCardPoints(currentPlayer);
                     //System.out.println("scoreToAddOrSubtract: " + scoreToAddOrSubtract);
                     gs.addScore(currentPlayer,scoreToAddOrSubtract);
-
-
                 }
 
+                // longest continuous path
+                List<Integer> longestRoutesOfEachPlayer = new ArrayList<>();
+                int highestRouteLength = 0;
+
+                for (int currentPlayer = 0; currentPlayer <= numOfPlayers; currentPlayer++) {
+
+                    int playerRouteLength = gs.getLongestRouteLength(currentPlayer);
+                    longestRoutesOfEachPlayer.add(playerRouteLength);
+                    highestRouteLength = Math.max(highestRouteLength, playerRouteLength);
+                }
+
+
+                if (highestRouteLength > 0) { //check for those with same highestRouteLength (tie)
+                    List<Integer> playersWhoWonLongestPath = new ArrayList<>();
+                    for (int currentPlayer = 0; currentPlayer < longestRoutesOfEachPlayer.size(); currentPlayer++) {
+                        if (longestRoutesOfEachPlayer.get(currentPlayer) == highestRouteLength) {
+                            playersWhoWonLongestPath.add(currentPlayer);
+                        }
+                    }
+
+                    for (int currentPlayerWhoWonLongestPath : playersWhoWonLongestPath) { // incase of ties
+                        gs.addScore(currentPlayerWhoWonLongestPath, 10);
+                        //System.out.println(currentPlayerWhoWonLongestPath + " has the longest cont path");
+
+                    }
+                }
 
                 endGame(gs);
 

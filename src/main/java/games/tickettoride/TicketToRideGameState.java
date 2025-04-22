@@ -10,7 +10,6 @@ import core.properties.PropertyInt;
 import core.properties.PropertyStringArray;
 import games.GameType;
 
-import org.apache.hadoop.yarn.state.Graph;
 import utilities.Hash;
 
 
@@ -448,7 +447,6 @@ public class  TicketToRideGameState extends AbstractGameState {
 
         for (Edge currentEdge : edges) {
 
-            boolean routeClaimed = ((PropertyBoolean)(currentEdge.getProperty(routeClaimedHash))).value;
             //System.out.println(routeClaimed +" route claimed in getsearch");
 
             PropertyInt claimedByRoute1Prop =  (PropertyInt)(currentEdge.getProperty(claimedByPlayerRoute1Hash));
@@ -468,7 +466,7 @@ public class  TicketToRideGameState extends AbstractGameState {
             }
 
 
-            if ((routeClaimed && claimedByRoute1 == playerId) || (routeClaimed && claimedByRoute2 == playerId))  { //check a player has claimed atleast one of the routes
+            if ((claimedByRoute1 == playerId) || (claimedByRoute2 == playerId))  { //check a player has claimed atleast one of the routes
 
                 Property nodeProp = currentEdge.getProperty(nodesHash);
                 String[] nodes = ((PropertyStringArray) nodeProp).getValues();
@@ -512,6 +510,68 @@ public class  TicketToRideGameState extends AbstractGameState {
         }
 
         return false;
+    }
+
+
+
+        public int getLongestRouteLength(int playerId) {
+
+        Map<String, List<Object[]>> claimedRoutesGraph = new HashMap<>(); //get players routes in an array
+        HashSet<Edge> routes = (HashSet<Edge>) getWorld().getBoardEdges();
+
+        for (Edge currentRoute : routes) { //go through every route
+
+            PropertyInt route1 = (PropertyInt) currentRoute.getProperty(TicketToRideConstants.claimedByPlayerRoute1Hash);
+            PropertyInt route2 = (PropertyInt) currentRoute.getProperty(TicketToRideConstants.claimedByPlayerRoute2Hash);
+
+            boolean isClaimedByCurrentPlayer = (route1.value == playerId || (route2 != null && route2.value == playerId));
+
+            String[] locationsInRoute = ((PropertyStringArray) currentRoute.getProperty(TicketToRideConstants.nodesHash)).getValues(); //get the 2 locations in route
+
+            if (isClaimedByCurrentPlayer) { //building graph of routes a player has claimed, bidirectional
+                int currentRouteLength = ((PropertyInt) currentRoute.getProperty(TicketToRideConstants.trainCardsRequiredHash)).value;
+                claimedRoutesGraph.computeIfAbsent(locationsInRoute[0], k -> new ArrayList<>()).add(new Object[]{locationsInRoute[1], currentRouteLength});
+                claimedRoutesGraph.computeIfAbsent(locationsInRoute[1], k -> new ArrayList<>()).add(new Object[]{locationsInRoute[0], currentRouteLength});
+            }
+        }
+
+        int highestRouteLength = 0;
+        for (String currentLocation : claimedRoutesGraph.keySet()) {
+            highestRouteLength = Math.max(highestRouteLength, longestPathSearch(currentLocation, claimedRoutesGraph)); //call bfs to get the highest route length
+        }
+        return highestRouteLength;
+    }
+
+
+    //uses bfs to get longest path in their claimed routes graph
+    private int longestPathSearch(String startingLocation, Map<String, List<Object[]>> claimedRoutesGraph) {
+        int maxPath = 0;
+        Queue<List<Object>> queue = new LinkedList<>();
+        queue.add(Arrays.asList(startingLocation, 0, new HashSet<>())); //holds current location, current length, and seen edges
+
+        while (!queue.isEmpty()) {
+            List<Object> currentPath = queue.poll();
+            String currentLocation = (String) currentPath.get(0);
+            int currentLength = (Integer) currentPath.get(1);
+            Set<String> traversedRoute = (Set<String>) currentPath.get(2);
+
+            maxPath = Math.max(maxPath, currentLength); //tracks the longest route encountered with  max function
+
+            for (Object[] connection : claimedRoutesGraph.getOrDefault(currentLocation, new ArrayList<>())) { //explore neigbours
+                String neighbour = (String) connection[0];
+                int routeLength = (Integer) connection[1];
+
+                // unique edge Id
+                String edgeId = currentLocation.compareTo(neighbour) < 0 ? currentLocation + "-" + neighbour : neighbour + "-" + currentLocation;
+
+                if (!traversedRoute.contains(edgeId)) {
+                    Set<String> newTraversedRoute = new HashSet<>(traversedRoute);
+                    newTraversedRoute.add(edgeId);
+                    queue.add(Arrays.asList(neighbour, currentLength + routeLength, newTraversedRoute));
+                }
+            }
+        }
+        return maxPath;
     }
 
 

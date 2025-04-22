@@ -1,0 +1,32 @@
+{
+  "class": "evaluation.listeners.MetricsGameListener",
+  "args": [
+    {
+      "enum": "evaluation.metrics.IDataLogger$ReportDestination",
+      "value": "ToFile"
+    },
+    [
+      {
+        "enum": "evaluation.metrics.IDataLogger$ReportType",
+        "value": "RawData"
+      },
+      {
+        "enum": "evaluation.metrics.IDataLogger$ReportType",
+        "value": "Summary"
+      }
+    ],
+    [
+      {"class": "games.tickettoride.stats.TicketToRideMetrics$Win"},
+      {"class": "evaluation.metrics.GameMetrics$GameScore" },
+      {"class": "games.tickettoride.stats.TicketToRideMetrics$FinalScores"},
+      {"class": "evaluation.metrics.GameMetrics$StateSpace" },
+      {"class": "evaluation.metrics.GameMetrics$ComputationTimes" },
+      {"class": "evaluation.metrics.GameMetrics$Decisions" },
+      {"class": "games.tickettoride.stats.TicketToRideMetrics$RoutesClaimed"},
+      {"class": "games.tickettoride.stats.TicketToRideMetrics$ActionsChosen"},
+      {"class": "games.tickettoride.stats.TicketToRideMetrics$DestinationCards"}
+
+
+    ]
+  ]
+}
