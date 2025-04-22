@@ -217,6 +217,8 @@ public class  TicketToRideGameState extends AbstractGameState {
 
         int currentPlayer = this.getCurrentPlayer();
 
+        int playerTrainCars = this.getTrainCars(currentPlayer); //players must have sufficient train cars
+
         Deck<Card> playerTrainCardHandDeck = (Deck<Card>) this.getComponentActingPlayer(currentPlayer,playerHandHash);
 
         for (Edge edge : allEdges) {
@@ -242,6 +244,10 @@ public class  TicketToRideGameState extends AbstractGameState {
             if (trainCardsRequiredProp instanceof PropertyInt) {
 
                 int trainCardsRequired = ((PropertyInt) trainCardsRequiredProp).value;
+
+                if (playerTrainCars < trainCardsRequired) { //check player has enough train cars
+                    continue;
+                }
 
                 Map<String, Integer> playerTrainCards = this.getTrainCarCardAmounts(playerTrainCardHandDeck);
                 int currentAmountOfLocomotivesInHand = playerTrainCards.getOrDefault("Locomotive", 0);
